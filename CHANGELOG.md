@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-01-17
 
 ### Added
-- 🎨 **Syntax Highlighting** for Rego policy files
+- **Syntax Highlighting** for Rego policy files
   - Keywords: `package`, `import`, `if`, `else`, `not`, `with`, `as`, `default`, `some`, `every`, `in`, `contains`
   - Comments: line comments with `#`
   - Strings: double-quoted and raw strings
@@ -73,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Built-in functions: 50+ OPA built-in functions
   - Special variables: `input`, `data`
   
-- 📝 **Code Snippets** for common patterns
+- **Code Snippets** for common patterns
   - Package and import declarations
   - Rule templates (allow, deny, default)
   - Iteration patterns (some, every)
@@ -81,14 +81,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Policy templates (RBAC, ABAC)
   - Test templates
   
-- 🔧 **Language Configuration**
+- **Language Configuration**
   - Bracket matching and auto-closing
   - Comment toggling with `#`
   - Code folding support
   - Word pattern recognition
   - Indentation rules
 
-- 📁 **File Association**
+- **File Association**
   - Automatic recognition of `.rego` files
 
 ### Technical

@@ -1,6 +1,6 @@
 # Contributing to Rego Syntax Support
 
-First off, thank you for considering contributing to Rego Syntax Support! 🎉
+First off, thank you for considering contributing to Rego Syntax Support!
 
 ## Code of Conduct
 
@@ -8,7 +8,7 @@ By participating in this project, you are expected to uphold our Code of Conduct
 
 ## How Can I Contribute?
 
-### 🐛 Reporting Bugs
+### Reporting Bugs
 
 Before creating bug reports, please check the existing issues. When creating a bug report, include:
 
@@ -18,7 +18,7 @@ Before creating bug reports, please check the existing issues. When creating a b
 - **Screenshots** if applicable
 - **Environment details**: VS Code version, OS, extension version
 
-### 💡 Suggesting Features
+### Suggesting Features
 
 Feature suggestions are welcome! Please include:
 
@@ -26,7 +26,7 @@ Feature suggestions are welcome! Please include:
 - **Proposed solution**: How should it work?
 - **Alternatives considered**: Other approaches you've thought of
 
-### 🔧 Pull Requests
+### Pull Requests
 
 1. **Fork** the repository
 2. **Clone** your fork locally
@@ -135,4 +135,4 @@ Feel free to open an issue with the "question" label!
 
 ---
 
-Thank you for contributing! 🚀
+Thank you for contributing!
