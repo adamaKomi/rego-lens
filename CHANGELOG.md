@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1]
+
+### Changed
+- Updated release workflow to publish through trusted publishing (OIDC) on the VS Code Marketplace and Open VSX.
+
 ## [0.2.0] - 2026-11-01
 
 ### Added
