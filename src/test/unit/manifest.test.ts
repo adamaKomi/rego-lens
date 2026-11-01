@@ -98,6 +98,40 @@ suite('Extension manifest (package.json)', () => {
   });
 });
 
+suite('Displayed texts', () => {
+  // Pictographic emoji and variation selectors (U+FE0F); typographic symbols such as arrows are allowed.
+  const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]|\u{FE0F}/u;
+
+  const texts: Array<[string, string]> = [
+    ['package.json description', pkg.description as string],
+    ['package.json displayName', pkg.displayName as string],
+    ...[
+      'README.md',
+      'CHANGELOG.md',
+      'SECURITY.md',
+      'docs/CONTRIBUTING.md',
+      'docs/GRAMMAR.md',
+      'docs/PUBLISHING.md',
+    ].map((file): [string, string] => [file, fs.readFileSync(path.join(ROOT, file), 'utf8')]),
+    ...Object.entries(
+      JSON.parse(
+        fs.readFileSync(path.join(ROOT, 'snippets', 'rego.snippets.json'), 'utf8')
+      ) as Record<string, { description: string }>
+    ).map(([name, s]): [string, string] => [`snippet "${name}"`, `${name} ${s.description}`]),
+  ];
+
+  for (const [where, text] of texts) {
+    test(`${where} contains no emoji`, () => {
+      const lines = text
+        .split(/\r?\n/)
+        .map((line, i) => [i + 1, line] as const)
+        .filter(([, line]) => EMOJI.test(line))
+        .map(([n, line]) => `${n}: ${line.trim()}`);
+      assert.deepStrictEqual(lines, []);
+    });
+  }
+});
+
 suite('Language configuration', () => {
   const config = JSON.parse(
     fs.readFileSync(path.join(ROOT, 'languages', 'rego-language-configuration.json'), 'utf8')
