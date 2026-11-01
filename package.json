@@ -67,6 +67,26 @@
         "language": "rego",
         "scopeName": "source.rego",
         "path": "./syntaxes/rego.tmLanguage.json"
+      },
+      {
+        "scopeName": "rego-syntax-support.injection.yaml",
+        "path": "./syntaxes/rego.injection.yaml.json",
+        "injectTo": [
+          "source.yaml"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.rego": "rego"
+        }
+      },
+      {
+        "scopeName": "rego-syntax-support.injection.markdown",
+        "path": "./syntaxes/rego.injection.markdown.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.rego": "rego"
+        }
       }
     ],
     "snippets": [
@@ -113,13 +133,17 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "node ./out/test/runTest.js",
-    "test:grammar": "node ./out/test/grammar/runGrammarTest.js",
+    "test:grammar": "npm run test:grammar:rego && npm run test:grammar:embedded",
     "test:all": "npm run test:grammar && npm run test",
-    "validate:grammar": "node -e \"JSON.parse(require('fs').readFileSync('syntaxes/rego.tmLanguage.json'))\"",
     "package": "vsce package",
     "publish": "vsce publish",
     "clean": "rimraf out",
-    "prepare": "npm run compile"
+    "prepare": "npm run compile",
+    "build:grammars": "node scripts/build-grammars.js",
+    "check:grammars": "node scripts/build-grammars.js --check",
+    "update:builtins": "node scripts/update-builtins.js",
+    "test:grammar:rego": "vscode-tmgrammar-test -c \"test/grammar/*.test.rego\"",
+    "test:grammar:embedded": "vscode-tmgrammar-test -c -g test/vendor/vscode-grammars/yaml.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.0.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.1.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.2.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.3.tmLanguage.json -g test/vendor/vscode-grammars/yaml-embedded.tmLanguage.json -g test/vendor/vscode-grammars/markdown.tmLanguage.json \"test/embedded/*.test.yaml\" \"test/embedded/*.test.md\""
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",

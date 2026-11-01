@@ -1,0 +1,98 @@
+{
+  "scopeName": "rego-syntax-support.injection.yaml",
+  "injectionSelector": "L:source.yaml -string -comment -meta.embedded.block.rego",
+  "patterns": [
+    {
+      "include": "#rego-key"
+    },
+    {
+      "include": "#libs-key"
+    }
+  ],
+  "repository": {
+    "rego-key": {
+      "begin": "(?<![^\\s\\-?:])((?:rego|[A-Za-z0-9_.-]*\\.rego)|\"(?:rego|[A-Za-z0-9_.-]*\\.rego)\"|'(?:rego|[A-Za-z0-9_.-]*\\.rego)')[ \\t]*(:)[ \\t]+(\\|)([1-9][+-]?|[+-][1-9]?)?[ \\t]*(#.*)?$",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.tag.yaml"
+        },
+        "2": {
+          "name": "punctuation.separator.map.value.yaml"
+        },
+        "3": {
+          "name": "keyword.control.flow.block-scalar.literal.yaml"
+        },
+        "4": {
+          "name": "keyword.control.flow.block-scalar.indicator.yaml"
+        },
+        "5": {
+          "name": "comment.line.number-sign.yaml"
+        }
+      },
+      "while": "\\G(?=[ \\t]+\\S|[ \\t]*$)",
+      "contentName": "meta.embedded.block.rego",
+      "patterns": [
+        {
+          "include": "source.rego"
+        }
+      ]
+    },
+    "libs-key": {
+      "begin": "(?<![^\\s\\-?:])(libs|\"libs\"|'libs')[ \\t]*(:)[ \\t]*(#.*)?$",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.tag.yaml"
+        },
+        "2": {
+          "name": "punctuation.separator.map.value.yaml"
+        },
+        "3": {
+          "name": "comment.line.number-sign.yaml"
+        }
+      },
+      "comment": "A block sequence may be indented like its key (`libs:` then `- |` on the same column).",
+      "while": "\\G(?=[ \\t]+\\S|[ \\t]*$|-(?:[ \\t]|$))",
+      "patterns": [
+        {
+          "include": "#libs-item"
+        },
+        {
+          "include": "#yaml-comment"
+        }
+      ]
+    },
+    "libs-item": {
+      "begin": "\\G([ \\t]*)(-)[ \\t]+(\\|)([1-9][+-]?|[+-][1-9]?)?[ \\t]*(#.*)?$",
+      "beginCaptures": {
+        "2": {
+          "name": "punctuation.definition.block.sequence.item.yaml"
+        },
+        "3": {
+          "name": "keyword.control.flow.block-scalar.literal.yaml"
+        },
+        "4": {
+          "name": "keyword.control.flow.block-scalar.indicator.yaml"
+        },
+        "5": {
+          "name": "comment.line.number-sign.yaml"
+        }
+      },
+      "while": "\\G(?=\\1[ \\t]+\\S|[ \\t]*$)",
+      "contentName": "meta.embedded.block.rego",
+      "patterns": [
+        {
+          "include": "source.rego"
+        }
+      ]
+    },
+    "yaml-comment": {
+      "match": "(?:^|(?<=\\s))(#).*$",
+      "name": "comment.line.number-sign.yaml",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.comment.yaml"
+        }
+      }
+    }
+  }
+}

@@ -2,254 +2,659 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Rego",
   "scopeName": "source.rego",
-  "fileTypes": ["rego"],
+  "fileTypes": [
+    "rego"
+  ],
   "patterns": [
-    { "include": "#comments" },
-    { "include": "#strings" },
-    { "include": "#raw-strings" },
-    { "include": "#package-declaration" },
-    { "include": "#import-declaration" },
-    { "include": "#rule-definition" },
-    { "include": "#keywords" },
-    { "include": "#constants" },
-    { "include": "#operators" },
-    { "include": "#builtin-functions" },
-    { "include": "#variables" },
-    { "include": "#numbers" },
-    { "include": "#punctuation" }
+    {
+      "include": "#metadata-block"
+    },
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#package"
+    },
+    {
+      "include": "#import"
+    },
+    {
+      "include": "#rule-head"
+    },
+    {
+      "include": "#expression"
+    }
   ],
   "repository": {
-    "comments": {
-      "name": "comment.line.number-sign.rego",
-      "match": "#.*$"
+    "metadata-block": {
+      "comment": "A `# METADATA` annotation block. Every line must start at column 1 and the YAML ends at the first non-comment line.",
+      "name": "comment.block.documentation.metadata.rego",
+      "begin": "(?:^|\\G)(#)\\s*(METADATA)\\s*$",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.comment.rego"
+        },
+        "2": {
+          "name": "storage.type.metadata.rego"
+        }
+      },
+      "while": "(?:^|\\G)(#)",
+      "whileCaptures": {
+        "1": {
+          "name": "punctuation.definition.comment.rego"
+        }
+      },
+      "patterns": [
+        {
+          "match": "\\G\\s*(?:(-)\\s+)?([A-Za-z_][\\w-]*)\\s*(:)(?=\\s|$)",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.list.metadata.rego"
+            },
+            "2": {
+              "name": "entity.name.tag.metadata.rego"
+            },
+            "3": {
+              "name": "punctuation.separator.key-value.metadata.rego"
+            }
+          }
+        },
+        {
+          "match": "\\G\\s*(-)(?=\\s|$)",
+          "captures": {
+            "1": {
+              "name": "punctuation.definition.list.metadata.rego"
+            }
+          }
+        }
+      ]
     },
-    "strings": {
+    "comment": {
+      "match": "(#).*$",
+      "name": "comment.line.number-sign.rego",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.comment.rego"
+        }
+      }
+    },
+    "package": {
+      "match": "(?:^|\\G)\\s*(package)\\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*|\\[\\s*\"(?:[^\"\\\\]|\\\\.)*\"\\s*\\])*)",
+      "captures": {
+        "1": {
+          "name": "keyword.control.package.rego"
+        },
+        "2": {
+          "name": "entity.name.namespace.rego"
+        }
+      }
+    },
+    "import": {
+      "match": "(?:^|\\G)\\s*(import)\\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*|\\[\\s*\"(?:[^\"\\\\]|\\\\.)*\"\\s*\\])*)(?:\\s+(as)\\s+([a-zA-Z_][a-zA-Z0-9_]*))?",
+      "captures": {
+        "1": {
+          "name": "keyword.control.import.rego"
+        },
+        "2": {
+          "name": "entity.name.import.rego"
+        },
+        "3": {
+          "name": "keyword.control.as.rego"
+        },
+        "4": {
+          "name": "entity.name.alias.rego"
+        }
+      }
+    },
+    "rule-head": {
+      "comment": "Only tried at module level: inside {...}, [...] and (...) a leading identifier is a local variable, not a rule.",
+      "match": "(?:^|\\G)\\s*(?:(default)\\s+)?(?!(?:package|import|default|else|some|every|not|with|as|in|if|contains|true|false|null|and|or)\\b)([a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*)*)(?=\\s*(?:\\[|\\(|:=|=(?!=)|\\{|\\bif\\b|\\bcontains\\b|#|$))",
+      "captures": {
+        "1": {
+          "name": "keyword.control.rego"
+        },
+        "2": {
+          "name": "entity.name.function.rule.rego"
+        }
+      }
+    },
+    "expression": {
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#template-string"
+        },
+        {
+          "include": "#raw-template-string"
+        },
+        {
+          "include": "#string"
+        },
+        {
+          "include": "#raw-string"
+        },
+        {
+          "include": "#braces"
+        },
+        {
+          "include": "#brackets"
+        },
+        {
+          "include": "#parens"
+        },
+        {
+          "include": "#number"
+        },
+        {
+          "include": "#builtin-call"
+        },
+        {
+          "include": "#empty-set"
+        },
+        {
+          "include": "#logical-keyword"
+        },
+        {
+          "include": "#keyword"
+        },
+        {
+          "include": "#constant"
+        },
+        {
+          "include": "#language-variable"
+        },
+        {
+          "include": "#function-call"
+        },
+        {
+          "include": "#operator"
+        },
+        {
+          "include": "#punctuation"
+        }
+      ]
+    },
+    "braces": {
+      "begin": "\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.braces.begin.rego"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.braces.end.rego"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comprehension-body-braces"
+        },
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "brackets": {
+      "begin": "\\[",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.brackets.begin.rego"
+        }
+      },
+      "end": "\\]",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.brackets.end.rego"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#comprehension-body-brackets"
+        },
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "parens": {
+      "begin": "\\(",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.section.parens.begin.rego"
+        }
+      },
+      "end": "\\)",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.section.parens.end.rego"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "comprehension-body-brackets": {
+      "comment": "In `[term | query]` the first `|` separates the term from the query; later ones are set unions.",
+      "begin": "\\|",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.operator.comprehension.rego"
+        }
+      },
+      "end": "(?=\\])",
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "comprehension-body-braces": {
+      "comment": "In `{term | query}` / `{key: value | query}` the first `|` separates the head from the query. A `|` used as a set union directly inside a rule body cannot be told apart lexically and is scoped the same way.",
+      "begin": "\\|",
+      "beginCaptures": {
+        "0": {
+          "name": "keyword.operator.comprehension.rego"
+        }
+      },
+      "end": "(?=\\})",
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "string": {
+      "comment": "JSON string: may not span lines (scanner.go scanString).",
       "name": "string.quoted.double.rego",
       "begin": "\"",
-      "end": "\"",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.rego"
+        }
+      },
+      "end": "(\")|$",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.end.rego"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#string-escape"
+        }
+      ]
+    },
+    "string-escape": {
       "patterns": [
         {
           "name": "constant.character.escape.rego",
-          "match": "\\\\(?:[\"\\\\bfnrt]|u[0-9a-fA-F]{4})"
+          "match": "\\\\(?:[\"\\\\/bfnrt]|u[0-9a-fA-F]{4})"
+        },
+        {
+          "name": "invalid.illegal.unrecognized-string-escape.rego",
+          "match": "\\\\."
         }
       ]
     },
-    "raw-strings": {
+    "raw-string": {
+      "comment": "Raw strings may span lines and have no escape sequences.",
       "name": "string.quoted.raw.rego",
       "begin": "`",
-      "end": "`"
-    },
-    "package-declaration": {
-      "match": "^\\s*(package)\\s+([a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*)",
-      "captures": {
-        "1": { "name": "keyword.control.package.rego" },
-        "2": { "name": "entity.name.namespace.rego" }
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.rego"
+        }
+      },
+      "end": "`",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.rego"
+        }
       }
     },
-    "import-declaration": {
-      "match": "^\\s*(import)\\s+(future\\.keywords\\.[a-zA-Z_]+|data|input|[a-zA-Z_][a-zA-Z0-9_.]*)(\\s+(as)\\s+([a-zA-Z_][a-zA-Z0-9_]*))?",
+    "template-string": {
+      "comment": "String interpolation (OPA >= 1.12): $\"text {expr}\". Same escapes as JSON strings plus \\{.",
+      "name": "string.interpolated.rego",
+      "begin": "(\\$)(\")",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.template-string.rego"
+        },
+        "2": {
+          "name": "punctuation.definition.string.begin.rego"
+        }
+      },
+      "end": "(\")|$",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.string.end.rego"
+        }
+      },
+      "patterns": [
+        {
+          "name": "constant.character.escape.rego",
+          "match": "\\\\\\{"
+        },
+        {
+          "include": "#string-escape"
+        },
+        {
+          "include": "#template-expression"
+        }
+      ]
+    },
+    "raw-template-string": {
+      "comment": "Raw string interpolation (OPA >= 1.12): $`text {expr}`. Only \\{ is an escape; may span lines.",
+      "name": "string.interpolated.raw.rego",
+      "begin": "(\\$)(\\`)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.template-string.rego"
+        },
+        "2": {
+          "name": "punctuation.definition.string.begin.rego"
+        }
+      },
+      "end": "`",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.rego"
+        }
+      },
+      "patterns": [
+        {
+          "name": "constant.character.escape.rego",
+          "match": "\\\\\\{"
+        },
+        {
+          "include": "#template-expression"
+        }
+      ]
+    },
+    "template-expression": {
+      "name": "meta.template.expression.rego",
+      "contentName": "meta.embedded.line.rego",
+      "begin": "\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.template-expression.begin.rego"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.template-expression.end.rego"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#expression"
+        }
+      ]
+    },
+    "number": {
+      "comment": "JSON numbers (scanner.go scanNumber). A number immediately followed by letters is illegal, e.g. 0a2b.",
+      "patterns": [
+        {
+          "name": "invalid.illegal.numeric.rego",
+          "match": "(?<![\\w.])(?>\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)[a-zA-Z_]\\w*"
+        },
+        {
+          "name": "constant.numeric.float.rego",
+          "match": "(?<![\\w.])\\d+(?:\\.\\d+(?:[eE][+-]?\\d+)?|[eE][+-]?\\d+)\\b"
+        },
+        {
+          "name": "constant.numeric.integer.rego",
+          "match": "(?<![\\w.])\\d+\\b"
+        }
+      ]
+    },
+    "builtin-call": {
+      "comment": "Generated from OPA v1.22.0 capabilities and builtin_metadata.json (scripts/update-builtins.js). Only matched when called, so a rule or field with the same name is not colored.",
+      "patterns": [
+        {
+          "name": "support.function.aggregates.rego",
+          "match": "(?<![\\w.$])(?:product|count|sort|max|min|sum)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.array.rego",
+          "match": "(?<![\\w.$])(?:array\\.flatten|array\\.reverse|array\\.concat|array\\.slice)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.bits.rego",
+          "match": "(?<![\\w.$])(?:bits\\.negate|bits\\.and|bits\\.lsh|bits\\.rsh|bits\\.xor|bits\\.or)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.builtin.rego",
+          "match": "(?<![\\w.$])(?:print)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.conversions.rego",
+          "match": "(?<![\\w.$])(?:to_number)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.crypto.rego",
+          "match": "(?<![\\w.$])(?:crypto\\.x509\\.parse_and_verify_certificates_with_options|crypto\\.x509\\.parse_and_verify_certificates|crypto\\.x509\\.parse_certificate_request|crypto\\.x509\\.parse_rsa_private_key|crypto\\.x509\\.parse_certificates|crypto\\.parse_private_keys|crypto\\.x509\\.parse_keypair|crypto\\.hmac\\.sha256|crypto\\.hmac\\.sha512|crypto\\.hmac\\.equal|crypto\\.hmac\\.sha1|crypto\\.hmac\\.md5|crypto\\.sha256|crypto\\.sha1|crypto\\.md5)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.encoding.rego",
+          "match": "(?<![\\w.$])(?:json\\.marshal_with_options|base64url\\.encode_no_pad|urlquery\\.decode_object|urlquery\\.encode_object|base64url\\.decode|base64url\\.encode|base64\\.is_valid|urlquery\\.decode|urlquery\\.encode|json\\.unmarshal|yaml\\.unmarshal|base64\\.decode|base64\\.encode|json\\.is_valid|yaml\\.is_valid|json\\.marshal|yaml\\.marshal|hex\\.decode|hex\\.encode)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.glob.rego",
+          "match": "(?<![\\w.$])(?:glob\\.quote_meta|glob\\.match)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.graph.rego",
+          "match": "(?<![\\w.$])(?:graph\\.reachable_paths|graph\\.reachable|walk)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.graphql.rego",
+          "match": "(?<![\\w.$])(?:graphql\\.parse_and_verify|graphql\\.schema_is_valid|graphql\\.parse_schema|graphql\\.parse_query|graphql\\.is_valid|graphql\\.parse)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.http.rego",
+          "match": "(?<![\\w.$])(?:http\\.send)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.net.rego",
+          "match": "(?<![\\w.$])(?:net\\.cidr_contains_matches|net\\.cidr_intersects|net\\.lookup_ip_addr|net\\.cidr_contains|net\\.cidr_is_valid|net\\.cidr_expand|net\\.cidr_merge)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.numbers.rego",
+          "match": "(?<![\\w.$])(?:numbers\\.range_step|numbers\\.range|rand\\.intn|floor|round|ceil|abs)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.object.rego",
+          "match": "(?<![\\w.$])(?:json\\.verify_schema|json\\.match_schema|object\\.union_n|object\\.filter|object\\.remove|object\\.subset|object\\.union|json\\.filter|json\\.remove|object\\.keys|json\\.patch|object\\.get)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.opa.rego",
+          "match": "(?<![\\w.$])(?:opa\\.runtime)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.providers.aws.rego",
+          "match": "(?<![\\w.$])(?:providers\\.aws\\.sign_req)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.regex.rego",
+          "match": "(?<![\\w.$])(?:regex\\.find_all_string_submatch_n|regex\\.template_match|regex\\.globs_match|regex\\.is_valid|regex\\.replace|regex\\.find_n|regex\\.match|regex\\.split)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.rego.rego",
+          "match": "(?<![\\w.$])(?:rego\\.metadata\\.chain|rego\\.metadata\\.rule|rego\\.parse_module)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.semver.rego",
+          "match": "(?<![\\w.$])(?:semver\\.is_valid|semver\\.compare)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.sets.rego",
+          "match": "(?<![\\w.$])(?:intersection|union)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.strings.rego",
+          "match": "(?<![\\w.$])(?:strings\\.any_prefix_match|strings\\.any_suffix_match|strings\\.render_template|strings\\.replace_n|strings\\.reverse|strings\\.split_n|strings\\.count|trim_prefix|trim_suffix|format_int|startswith|trim_right|trim_space|indexof_n|substring|trim_left|contains|endswith|indexof|replace|sprintf|concat|lower|split|upper|trim)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.time.rego",
+          "match": "(?<![\\w.$])(?:time\\.parse_duration_ns|time\\.parse_rfc3339_ns|time\\.add_date|time\\.parse_ns|time\\.weekday|time\\.format|time\\.now_ns|time\\.clock|time\\.date|time\\.diff)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.tokens.rego",
+          "match": "(?<![\\w.$])(?:io\\.jwt\\.decode_verify|io\\.jwt\\.verify_eddsa|io\\.jwt\\.verify_es256|io\\.jwt\\.verify_es384|io\\.jwt\\.verify_es512|io\\.jwt\\.verify_hs256|io\\.jwt\\.verify_hs384|io\\.jwt\\.verify_hs512|io\\.jwt\\.verify_ps256|io\\.jwt\\.verify_ps384|io\\.jwt\\.verify_ps512|io\\.jwt\\.verify_rs256|io\\.jwt\\.verify_rs384|io\\.jwt\\.verify_rs512|io\\.jwt\\.decode)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.tokensign.rego",
+          "match": "(?<![\\w.$])(?:io\\.jwt\\.encode_sign_raw|io\\.jwt\\.encode_sign)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.tracing.rego",
+          "match": "(?<![\\w.$])(?:trace)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.types.rego",
+          "match": "(?<![\\w.$])(?:is_boolean|is_number|is_object|is_string|type_name|is_array|is_null|is_set)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.units.rego",
+          "match": "(?<![\\w.$])(?:units\\.parse_bytes|units\\.parse)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.uri.rego",
+          "match": "(?<![\\w.$])(?:uri\\.is_valid|uri\\.parse)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.uuid.rego",
+          "match": "(?<![\\w.$])(?:uuid\\.rfc4122|uuid\\.parse)(?=\\s*\\()"
+        },
+        {
+          "name": "invalid.deprecated.builtin.rego",
+          "match": "(?<![\\w.$])(?:net\\.cidr_overlap|cast_boolean|cast_object|cast_string|cast_array|cast_null|cast_set|re_match|set_diff|all|any)(?=\\s*\\()"
+        }
+      ]
+    },
+    "empty-set": {
+      "comment": "`set()` is the literal for an empty set.",
+      "match": "(?<![\\w.$])(set)(\\()\\s*(\\))",
       "captures": {
-        "1": { "name": "keyword.control.import.rego" },
-        "2": { "name": "entity.name.import.rego" },
-        "4": { "name": "keyword.control.as.rego" },
-        "5": { "name": "entity.name.alias.rego" }
+        "1": {
+          "name": "support.type.set.rego"
+        },
+        "2": {
+          "name": "punctuation.section.parens.begin.rego"
+        },
+        "3": {
+          "name": "punctuation.section.parens.end.rego"
+        }
       }
     },
-    "rule-definition": {
-      "match": "^\\s*([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\[|\\(|\\{|:=|=|if)",
-      "captures": {
-        "1": { "name": "entity.name.function.rule.rego" }
-      }
+    "logical-keyword": {
+      "comment": "Future keywords enabled by `import future.keywords.and/or` or `import rego.v2` (OPA >= 1.17).",
+      "name": "keyword.operator.logical.rego",
+      "match": "(?<![\\w.$])\\b(?:and|or)\\b"
     },
-    "keywords": {
+    "keyword": {
       "patterns": [
         {
           "name": "keyword.control.rego",
-          "match": "\\b(if|else|not|with|as|default|some|every|in|contains)\\b"
+          "match": "(?<![\\w.$])\\b(?:if|else|not|with|as|default|some|every|in|contains)\\b"
         },
         {
           "name": "keyword.other.rego",
-          "match": "\\b(package|import)\\b"
+          "match": "(?<![\\w.$])\\b(?:package|import)\\b"
         }
       ]
     },
-    "constants": {
+    "constant": {
       "patterns": [
         {
           "name": "constant.language.boolean.rego",
-          "match": "\\b(true|false)\\b"
+          "match": "(?<![\\w.$])\\b(?:true|false)\\b"
         },
         {
           "name": "constant.language.null.rego",
-          "match": "\\b(null)\\b"
+          "match": "(?<![\\w.$])\\bnull\\b"
         }
       ]
     },
-    "operators": {
+    "language-variable": {
+      "patterns": [
+        {
+          "name": "variable.language.input.rego",
+          "match": "(?<![\\w.$])\\binput\\b"
+        },
+        {
+          "name": "variable.language.data.rego",
+          "match": "(?<![\\w.$])\\bdata\\b"
+        },
+        {
+          "name": "variable.language.wildcard.rego",
+          "match": "(?<![\\w.$])\\b_\\b"
+        }
+      ]
+    },
+    "function-call": {
+      "comment": "Call of a user-defined function, e.g. is_admin(user) or data.lib.helper(x).",
+      "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "entity.name.function.call.rego"
+        }
+      }
+    },
+    "operator": {
+      "comment": "Order matters: longest operators first.",
       "patterns": [
         {
           "name": "keyword.operator.assignment.rego",
-          "match": ":=|="
+          "match": ":="
         },
         {
           "name": "keyword.operator.comparison.rego",
-          "match": "==|!=|<=|>=|<|>"
+          "match": "==|!=|<=|>="
+        },
+        {
+          "name": "keyword.operator.unification.rego",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.comparison.rego",
+          "match": "<|>"
         },
         {
           "name": "keyword.operator.arithmetic.rego",
           "match": "\\+|-|\\*|/|%"
         },
         {
-          "name": "keyword.operator.logical.rego",
+          "name": "keyword.operator.set.rego",
           "match": "&|\\|"
-        }
-      ]
-    },
-    "builtin-functions": {
-      "patterns": [
-        {
-          "name": "support.function.aggregate.rego",
-          "match": "\\b(count|sum|product|max|min|sort|all|any)\\b"
-        },
-        {
-          "name": "support.function.string.rego",
-          "match": "\\b(concat|contains|endswith|format_int|indexof|lower|replace|split|sprintf|startswith|substring|trim|trim_left|trim_prefix|trim_right|trim_suffix|trim_space|upper)\\b"
-        },
-        {
-          "name": "support.function.regex.rego",
-          "match": "\\b(regex\\.match|regex\\.split|regex\\.globs_match|regex\\.template_match|regex\\.find_n|regex\\.find_all_string_submatch_n)\\b"
-        },
-        {
-          "name": "support.function.array.rego",
-          "match": "\\b(array\\.concat|array\\.slice)\\b"
-        },
-        {
-          "name": "support.function.set.rego",
-          "match": "\\b(intersection|union)\\b"
-        },
-        {
-          "name": "support.function.object.rego",
-          "match": "\\b(object\\.get|object\\.remove|object\\.union|object\\.filter|json\\.marshal|json\\.unmarshal)\\b"
-        },
-        {
-          "name": "support.function.type.rego",
-          "match": "\\b(is_array|is_boolean|is_null|is_number|is_object|is_set|is_string|type_name)\\b"
-        },
-        {
-          "name": "support.function.encoding.rego",
-          "match": "\\b(base64\\.encode|base64\\.decode|base64url\\.encode|base64url\\.decode|urlquery\\.encode|urlquery\\.decode|urlquery\\.encode_object)\\b"
-        },
-        {
-          "name": "support.function.token.rego",
-          "match": "\\b(io\\.jwt\\.encode_sign|io\\.jwt\\.encode_sign_raw|io\\.jwt\\.decode|io\\.jwt\\.decode_verify|io\\.jwt\\.verify_es256|io\\.jwt\\.verify_es384|io\\.jwt\\.verify_es512|io\\.jwt\\.verify_hs256|io\\.jwt\\.verify_hs384|io\\.jwt\\.verify_hs512|io\\.jwt\\.verify_ps256|io\\.jwt\\.verify_ps384|io\\.jwt\\.verify_ps512|io\\.jwt\\.verify_rs256|io\\.jwt\\.verify_rs384|io\\.jwt\\.verify_rs512)\\b"
-        },
-        {
-          "name": "support.function.time.rego",
-          "match": "\\b(time\\.now_ns|time\\.parse_ns|time\\.parse_rfc3339_ns|time\\.parse_duration_ns|time\\.date|time\\.clock|time\\.weekday|time\\.add_date)\\b"
-        },
-        {
-          "name": "support.function.crypto.rego",
-          "match": "\\b(crypto\\.sha256|crypto\\.md5|crypto\\.hmac\\.md5|crypto\\.hmac\\.sha1|crypto\\.hmac\\.sha256|crypto\\.hmac\\.sha512)\\b"
-        },
-        {
-          "name": "support.function.graph.rego",
-          "match": "\\b(graph\\.reachable|walk)\\b"
-        },
-        {
-          "name": "support.function.http.rego",
-          "match": "\\b(http\\.send)\\b"
-        },
-        {
-          "name": "support.function.net.rego",
-          "match": "\\b(net\\.cidr_contains|net\\.cidr_intersects|net\\.cidr_expand|net\\.cidr_merge)\\b"
-        },
-        {
-          "name": "support.function.rego.rego",
-          "match": "\\b(rego\\.parse_module)\\b"
-        },
-        {
-          "name": "support.function.opa.rego",
-          "match": "\\b(opa\\.runtime)\\b"
-        },
-        {
-          "name": "support.function.tracing.rego",
-          "match": "\\b(trace|print)\\b"
-        },
-        {
-          "name": "support.function.numbers.rego",
-          "match": "\\b(abs|ceil|floor|round|numbers\\.range)\\b"
-        },
-        {
-          "name": "support.function.bits.rego",
-          "match": "\\b(bits\\.or|bits\\.and|bits\\.negate|bits\\.xor|bits\\.lsh|bits\\.rsh)\\b"
-        },
-        {
-          "name": "support.function.conversion.rego",
-          "match": "\\b(to_number)\\b"
-        },
-        {
-          "name": "support.function.units.rego",
-          "match": "\\b(units\\.parse|units\\.parse_bytes)\\b"
-        },
-        {
-          "name": "support.function.uuid.rego",
-          "match": "\\b(uuid\\.rfc4122)\\b"
-        },
-        {
-          "name": "support.function.semver.rego",
-          "match": "\\b(semver\\.is_valid|semver\\.compare)\\b"
-        },
-        {
-          "name": "support.function.glob.rego",
-          "match": "\\b(glob\\.match|glob\\.quote_meta)\\b"
-        }
-      ]
-    },
-    "variables": {
-      "patterns": [
-        {
-          "name": "variable.language.input.rego",
-          "match": "\\b(input)\\b"
-        },
-        {
-          "name": "variable.language.data.rego",
-          "match": "\\b(data)\\b"
-        }
-      ]
-    },
-    "numbers": {
-      "patterns": [
-        {
-          "name": "constant.numeric.float.rego",
-          "match": "\\b\\d+\\.\\d+([eE][+-]?\\d+)?\\b"
-        },
-        {
-          "name": "constant.numeric.integer.rego",
-          "match": "\\b\\d+\\b"
         }
       ]
     },
     "punctuation": {
       "patterns": [
         {
-          "name": "punctuation.separator.rego",
-          "match": "[,;]"
+          "name": "punctuation.separator.comma.rego",
+          "match": ","
+        },
+        {
+          "name": "punctuation.terminator.statement.rego",
+          "match": ";"
         },
         {
           "name": "punctuation.accessor.rego",
           "match": "\\."
         },
         {
-          "name": "punctuation.definition.block.rego",
-          "match": "[{}]"
-        },
-        {
-          "name": "punctuation.definition.array.rego",
-          "match": "[\\[\\]]"
-        },
-        {
-          "name": "punctuation.definition.parameters.rego",
-          "match": "[()]"
+          "name": "punctuation.separator.key-value.rego",
+          "match": ":"
         }
       ]
     }
