@@ -29,7 +29,7 @@
           "name": "comment.line.number-sign.yaml"
         }
       },
-      "while": "\\G(?=[ \\t]+\\S|[ \\t]*$)",
+      "while": "(?:\\G|^)(?=[ \\t]+\\S|[ \\t]*$)",
       "contentName": "meta.embedded.block.rego",
       "patterns": [
         {
@@ -38,6 +38,7 @@
       ]
     },
     "libs-key": {
+      "comment": "A block sequence may be indented like its key (`libs:` then `- |` on the same column).",
       "begin": "(?<![^\\s\\-?:])(libs|\"libs\"|'libs')[ \\t]*(:)[ \\t]*(#.*)?$",
       "beginCaptures": {
         "1": {
@@ -50,8 +51,7 @@
           "name": "comment.line.number-sign.yaml"
         }
       },
-      "comment": "A block sequence may be indented like its key (`libs:` then `- |` on the same column).",
-      "while": "\\G(?=[ \\t]+\\S|[ \\t]*$|-(?:[ \\t]|$))",
+      "while": "(?:\\G|^)(?=[ \\t]+\\S|[ \\t]*$|-(?:[ \\t]|$))",
       "patterns": [
         {
           "include": "#libs-item"
@@ -62,6 +62,7 @@
       ]
     },
     "libs-item": {
+      "comment": "A `- |` item. \\G is where the enclosing `libs` rule stopped, so \\1 is relative to it.",
       "begin": "\\G([ \\t]*)(-)[ \\t]+(\\|)([1-9][+-]?|[+-][1-9]?)?[ \\t]*(#.*)?$",
       "beginCaptures": {
         "2": {

@@ -144,21 +144,33 @@ suite('Grammars: structure', () => {
     assert.deepStrictEqual(bad, []);
   });
 
-  test('injections declare the embedded Rego language and are excluded from their own content', () => {
-    for (const { contribution, grammar } of grammars.filter((g) => g.contribution.injectTo)) {
+  test('injections declare the embedded Rego language and stay out of strings, comments and their own content', () => {
+    const injections = grammars.filter((g) => g.contribution.injectTo);
+    assert.ok(injections.length >= 3);
+    for (const { contribution, grammar } of injections) {
       assert.deepStrictEqual(contribution.embeddedLanguages, {
         'meta.embedded.block.rego': 'rego',
       });
-      assert.ok(
-        grammar.injectionSelector?.startsWith('L:'),
-        `${contribution.path} must inject on the left`
+      const selector = grammar.injectionSelector ?? '';
+      assert.match(
+        selector,
+        /-meta\.embedded\.block\.rego|-markup\.fenced_code\.block\.markdown/,
+        contribution.path
       );
-      assert.ok(
-        /-meta\.embedded\.block\.rego|-markup\.fenced_code\.block\.markdown/.test(
-          grammar.injectionSelector ?? ''
-        ),
-        `${contribution.path} must not re-inject inside its own block`
-      );
+      if (contribution.injectTo?.includes('source.yaml')) {
+        assert.match(selector, /-string\b/, contribution.path);
+        assert.match(selector, /-comment\b/, contribution.path);
+      }
     }
+  });
+
+  test('YAML injections: the key rules win ties (L:), the column-0 rules must not', () => {
+    // vscode-textmate gives a tie to an injection only when its selector starts with L:.
+    // The line-start rules must lose ties so that older YAML grammars keep block scalar content as strings.
+    const selector = (scope: string): string =>
+      grammars.find((g) => g.grammar.scopeName === scope)?.grammar.injectionSelector ?? '';
+    assert.ok(selector('rego-syntax-support.injection.yaml').startsWith('L:'));
+    assert.ok(!/^[LR]:/.test(selector('rego-syntax-support.injection.yaml.line-start')));
+    assert.ok(selector('rego-syntax-support.injection.markdown').startsWith('L:'));
   });
 });

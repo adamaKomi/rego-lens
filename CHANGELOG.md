@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rego embedded in YAML**: literal block scalars (`key: |`) under `rego` and `libs`
   (OPA Gatekeeper `ConstraintTemplate`, also used by Azure Policy for AKS and GKE Policy
   Controller) and under any key ending in `.rego` (ConfigMaps for kube-mgmt, opa-envoy, ...).
+  Works with both YAML grammars shipped by VS Code (1.85 to 1.91, and 1.92 and later).
 - **Rego in Markdown**: ```` ```rego ```` and `~~~rego` fenced code blocks.
 - String interpolation `$"... {expr} ..."` and `` $`...` `` (OPA 1.12), including `\{` escapes.
 - `and` / `or` keywords (`import future.keywords.and|or`, `import rego.v2`).
@@ -57,7 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Markdown grammars.
 - Unit tests: every regex compiles with Oniguruma, every include resolves, every built-in,
   fixtures never flagged invalid, snippets expand to Rego that `opa parse` accepts (in CI).
-- Integration tests inspect the tokens computed by a real VS Code instance.
+- Integration tests inspect the tokens computed by a real VS Code instance (Linux, Windows, macOS, and
+  VS Code 1.85, the oldest supported version).
 
 ## [0.1.0] - 2026-01-17
 

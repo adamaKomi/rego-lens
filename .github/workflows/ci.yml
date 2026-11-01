@@ -57,7 +57,7 @@ jobs:
       - run: npm ci
       - name: Expand the snippets (written to out/snippets-check)
         run: npm run compile && npm run test:unit
-      - uses: open-policy-agent/setup-opa@v2
+      - uses: open-policy-agent/setup-opa@v2.4.0 # the v2 branch still targets Node 20
         with:
           version: ${{ env.OPA_VERSION }}
       - name: opa parse
