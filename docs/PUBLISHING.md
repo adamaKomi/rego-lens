@@ -29,11 +29,8 @@ This guide explains how to publish the Rego Syntax Support extension.
 
 ### 3. Create Publisher
 
-```bash
-npx vsce create-publisher YOUR_PUBLISHER_NAME
-```
-
-Or create manually at: https://marketplace.visualstudio.com/manage
+Create the publisher at <https://marketplace.visualstudio.com/manage> (`vsce` no longer has a
+`create-publisher` command).
 
 ### 4. Update package.json
 
@@ -63,12 +60,16 @@ npm run publish
    - `VSCE_PAT`: Your Azure DevOps PAT
    - `OVSX_PAT`: Your Open VSX PAT (optional)
 
-2. Push to main branch with commit message starting with `release:`
+2. Merge to `main`, then push a tag that matches the `version` of `package.json`:
 
 ```bash
-git commit -m "release: v0.1.0 - Initial release"
-git push origin main
+git tag v0.2.0
+git push origin v0.2.0
 ```
+
+The Release workflow (`.github/workflows/release.yml`) refuses a tag that does not match `package.json`,
+runs the tests, builds the VSIX once and publishes that file to GitHub Releases, the VS Code Marketplace
+and Open VSX. A tag with a suffix (`v0.3.0-rc.1`) only creates a GitHub pre-release.
 
 ## Version Management
 
@@ -130,8 +131,8 @@ npx ovsx publish -p YOUR_OVSX_TOKEN
 
 - [ ] Update version in `package.json`
 - [ ] Update `CHANGELOG.md`
-- [ ] Run all tests: `npm run test:all`
-- [ ] Run linting: `npm run lint`
+- [ ] Run all tests: `npm test` and `npm run test:integration`
+- [ ] Check what will be packaged: `npx vsce ls`
 - [ ] Test locally with F5
 - [ ] Verify icon displays correctly
 - [ ] Check README renders properly
