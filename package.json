@@ -76,6 +76,16 @@
         }
       },
       {
+        "scopeName": "rego-syntax-support.injection.yaml.line-start",
+        "path": "./syntaxes/rego.injection.yaml.line-start.json",
+        "injectTo": [
+          "source.yaml"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.rego": "rego"
+        }
+      },
+      {
         "scopeName": "rego-syntax-support.injection.markdown",
         "path": "./syntaxes/rego.injection.markdown.json",
         "injectTo": [
@@ -102,7 +112,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "npm run test:unit && npm run test:grammar",
-    "test:grammar": "npm run test:grammar:rego && npm run test:grammar:embedded",
+    "test:grammar": "npm run test:grammar:rego && npm run test:grammar:embedded && npm run test:grammar:embedded:legacy",
     "package": "vsce package",
     "publish": "vsce publish",
     "clean": "rimraf out",
@@ -113,7 +123,8 @@
     "test:grammar:rego": "vscode-tmgrammar-test -c \"test/grammar/*.test.rego\"",
     "test:grammar:embedded": "vscode-tmgrammar-test -c -g test/vendor/vscode-grammars/yaml.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.0.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.1.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.2.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.3.tmLanguage.json -g test/vendor/vscode-grammars/yaml-embedded.tmLanguage.json -g test/vendor/vscode-grammars/markdown.tmLanguage.json \"test/embedded/*.test.yaml\" \"test/embedded/*.test.md\"",
     "test:unit": "node ./out/test/unit/index.js",
-    "test:integration": "node ./out/test/runTest.js"
+    "test:integration": "node ./out/test/runTest.js",
+    "test:grammar:embedded:legacy": "vscode-tmgrammar-test -c -g test/vendor/vscode-1.85-grammars/yaml.tmLanguage.json \"test/embedded/*.test.yaml\""
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -121,7 +132,7 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
-    "@vscode/test-electron": "^2.3.8",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.1.0",
     "eslint": "^8.55.0",
     "eslint-config-prettier": "^9.1.0",

@@ -15,6 +15,7 @@ const ROOT = path.resolve(__dirname, '..');
 const OUTPUTS = {
   'syntaxes/rego.tmLanguage.json': './grammar/rego',
   'syntaxes/rego.injection.yaml.json': './grammar/injection-yaml',
+  'syntaxes/rego.injection.yaml.line-start.json': './grammar/injection-yaml-line-start',
   'syntaxes/rego.injection.markdown.json': './grammar/injection-markdown',
 };
 
