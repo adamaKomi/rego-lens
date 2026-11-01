@@ -1,8 +1,8 @@
 {
   "name": "rego-syntax-support",
   "displayName": "Rego Syntax Support",
-  "description": "Syntax highlighting and language support for OPA Rego policy language",
-  "version": "0.1.1",
+  "description": "Rego (Open Policy Agent) syntax highlighting and snippets, including Rego embedded in Gatekeeper/Kubernetes YAML and Markdown",
+  "version": "0.2.0",
   "publisher": "AdamaKomi",
   "author": {
     "name": "Adama Komi"
@@ -13,36 +13,33 @@
   },
   "categories": [
     "Programming Languages",
-    "Snippets",
-    "Formatters"
+    "Snippets"
   ],
   "keywords": [
     "rego",
     "opa",
     "open policy agent",
-    "policy",
+    "policy as code",
+    "gatekeeper",
+    "kubernetes",
     "authorization",
-    "abac",
     "rbac",
+    "abac",
     "syntax highlighting"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/adamaKomi/opa-rego-extension.git"
+    "url": "https://github.com/adamaKomi/rego-syntax-support.git"
   },
   "bugs": {
-    "url": "https://github.com/adamaKomi/opa-rego-extension/issues"
+    "url": "https://github.com/adamaKomi/rego-syntax-support/issues"
   },
-  "homepage": "https://github.com/adamaKomi/opa-rego-extension#readme",
+  "homepage": "https://github.com/adamaKomi/rego-syntax-support#readme",
   "icon": "resources/icon.png",
   "galleryBanner": {
     "color": "#1e1e1e",
     "theme": "dark"
   },
-  "main": "./out/extension.js",
-  "activationEvents": [
-    "onLanguage:rego"
-  ],
   "contributes": {
     "languages": [
       {
@@ -94,37 +91,9 @@
         "language": "rego",
         "path": "./snippets/rego.snippets.json"
       }
-    ],
-    "configuration": {
-      "title": "Rego Syntax Support",
-      "properties": {
-        "rego.trace.server": {
-          "type": "string",
-          "enum": [
-            "off",
-            "messages",
-            "verbose"
-          ],
-          "default": "off",
-          "description": "Traces the communication between VS Code and the Rego language server."
-        },
-        "rego.formatting.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable/disable Rego formatting."
-        }
-      }
-    },
-    "commands": [
-      {
-        "command": "rego.showVersion",
-        "title": "Show Rego Extension Version",
-        "category": "Rego"
-      }
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
@@ -132,9 +101,8 @@
     "lint:fix": "eslint src --ext ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
-    "test": "node ./out/test/runTest.js",
+    "test": "npm run test:unit && npm run test:grammar",
     "test:grammar": "npm run test:grammar:rego && npm run test:grammar:embedded",
-    "test:all": "npm run test:grammar && npm run test",
     "package": "vsce package",
     "publish": "vsce publish",
     "clean": "rimraf out",
@@ -143,7 +111,9 @@
     "check:grammars": "node scripts/build-grammars.js --check",
     "update:builtins": "node scripts/update-builtins.js",
     "test:grammar:rego": "vscode-tmgrammar-test -c \"test/grammar/*.test.rego\"",
-    "test:grammar:embedded": "vscode-tmgrammar-test -c -g test/vendor/vscode-grammars/yaml.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.0.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.1.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.2.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.3.tmLanguage.json -g test/vendor/vscode-grammars/yaml-embedded.tmLanguage.json -g test/vendor/vscode-grammars/markdown.tmLanguage.json \"test/embedded/*.test.yaml\" \"test/embedded/*.test.md\""
+    "test:grammar:embedded": "vscode-tmgrammar-test -c -g test/vendor/vscode-grammars/yaml.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.0.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.1.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.2.tmLanguage.json -g test/vendor/vscode-grammars/yaml-1.3.tmLanguage.json -g test/vendor/vscode-grammars/yaml-embedded.tmLanguage.json -g test/vendor/vscode-grammars/markdown.tmLanguage.json \"test/embedded/*.test.yaml\" \"test/embedded/*.test.md\"",
+    "test:unit": "node ./out/test/unit/index.js",
+    "test:integration": "node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -152,7 +122,7 @@
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "@vscode/test-electron": "^2.3.8",
-    "@vscode/vsce": "^2.22.0",
+    "@vscode/vsce": "^4.1.0",
     "eslint": "^8.55.0",
     "eslint-config-prettier": "^9.1.0",
     "glob": "^10.3.10",
