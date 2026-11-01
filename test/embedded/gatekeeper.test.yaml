@@ -1,0 +1,77 @@
+# SYNTAX TEST "source.yaml" "Rego embedded in an OPA Gatekeeper ConstraintTemplate"
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredlabels
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredLabels
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+#     ^^^^ entity.name.tag.yaml - meta.embedded.block.rego
+#           ^ keyword.control.flow.block-scalar.literal.yaml
+        package k8srequiredlabels
+#       ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+#               ^^^^^^^^^^^^^^^^^ meta.embedded.block.rego entity.name.namespace.rego
+
+        import data.lib.helpers
+
+        # a Rego comment inside the block
+#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.embedded.block.rego comment.line.number-sign.rego
+        violation contains {"msg": msg, "details": {"missing_labels": missing}} if {
+#       ^^^^^^^^^ meta.embedded.block.rego entity.name.function.rule.rego
+#                 ^^^^^^^^ meta.embedded.block.rego keyword.control.rego
+          provided := {label | input.review.object.metadata.labels[label]}
+#         ^^^^^^^^ meta.embedded.block.rego - entity.name.function.rule.rego
+#                            ^ meta.embedded.block.rego keyword.operator.comprehension.rego
+#                              ^^^^^ meta.embedded.block.rego variable.language.input.rego
+          missing := required - provided
+          count(missing) > 0
+#         ^^^^^ meta.embedded.block.rego support.function.aggregates.rego
+          msg := $"you must provide labels: {missing}"
+#                ^^ meta.embedded.block.rego string.interpolated.rego
+
+        }
+#       ^ meta.embedded.block.rego punctuation.section.braces.end.rego
+      libs:
+#     ^^^^ entity.name.tag.yaml - meta.embedded.block.rego
+        - |
+#       ^ punctuation.definition.block.sequence.item.yaml
+#         ^ keyword.control.flow.block-scalar.literal.yaml
+          package lib.helpers
+#         ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+          is_admin(user) if user.role == "admin"
+#         ^^^^^^^^ meta.embedded.block.rego entity.name.function.rule.rego
+        - |-
+#         ^^ - meta.embedded.block.rego
+          package lib.more
+#         ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+    - target: other.target
+#     ^^^^^^ entity.name.tag.yaml - meta.embedded.block.rego
+#             ^^^^^^^^^^^^ - meta.embedded.block.rego
+      rego: |2-
+          package with_indentation_indicator
+#         ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+      code:
+#     ^^^^ entity.name.tag.yaml - meta.embedded.block.rego
+      - engine: rego
+#               ^^^^ - meta.embedded.block.rego entity.name.tag.yaml
+        source:
+          rego: |
+            package nested.deeper
+#           ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+          after: 1
+#         ^^^^^ entity.name.tag.yaml - meta.embedded.block.rego
+---
+libs:
+- |
+  package libs.at.key.column
+# ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+- |
+  package second.item
+# ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+other: value
+# <----- entity.name.tag.yaml - meta.embedded.block.rego

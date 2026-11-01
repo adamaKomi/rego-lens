@@ -1,0 +1,51 @@
+# SYNTAX TEST "source.yaml" "Rego embedded in ConfigMaps and generic keys"
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-policy
+data:
+  policy.rego: |
+# ^^^^^^^^^^^ entity.name.tag.yaml
+    package envoy.authz
+#   ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+
+    default allow := false
+#   ^^^^^^^ meta.embedded.block.rego keyword.control.rego
+#           ^^^^^ meta.embedded.block.rego entity.name.function.rule.rego
+  "quoted.rego": |-
+# ^^^^^^^^^^^^^ entity.name.tag.yaml
+    package quoted
+#   ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+  'single-quoted.rego': |+ # trailing YAML comment
+# ^^^^^^^^^^^^^^^^^^^^ entity.name.tag.yaml
+#                          ^^^^^^^^^^^^^^^^^^^^^^^ comment.line.number-sign.yaml
+    package single
+#   ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+  # a YAML comment at the key column ends the block
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ comment.line.number-sign.yaml - meta.embedded.block.rego
+  plain.txt: |
+    package not_rego
+#   ^^^^^^^ - meta.embedded.block.rego keyword.control.package.rego
+  notrego: |
+    package not_rego_either
+#   ^^^^^^^ - meta.embedded.block.rego
+  policy.rego.bak: |
+    package still_not_rego
+#   ^^^^^^^ - meta.embedded.block.rego
+  inline.rego: "package inline"
+#               ^^^^^^^ - meta.embedded.block.rego
+  folded.rego: >
+    package folded
+#   ^^^^^^^ - meta.embedded.block.rego
+  description: |
+    rego: |
+      package inside_another_block_scalar
+#     ^^^^^^^ - meta.embedded.block.rego
+  # rego: |
+    package commented_out
+#   ^^^^^^^ - meta.embedded.block.rego
+rego: |
+  package top_level
+# ^^^^^^^ meta.embedded.block.rego keyword.control.package.rego
+less_indented: true
+# <------------- entity.name.tag.yaml - meta.embedded.block.rego

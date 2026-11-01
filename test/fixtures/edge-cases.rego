@@ -73,8 +73,11 @@ not_in_list if {
     not input.item in input.blocked_items
 }
 
+# `not not x` is a parse error in OPA ("unexpected not keyword"): negate a helper rule instead
+disabled if not input.enabled
+
 double_negation if {
-    not not input.enabled
+    not disabled
 }
 
 # Function-like rule with arguments

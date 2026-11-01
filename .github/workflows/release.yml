@@ -1,123 +1,106 @@
 name: Release
 
+# Pushing a tag vX.Y.Z (matching package.json) builds the extension once, then publishes that
+# exact .vsix to GitHub Releases, the VS Code Marketplace and Open VSX.
+# Tags with a suffix (v1.2.3-rc.1) only create a GitHub pre-release.
+#
+# Marketplace: Trusted Publishing (OIDC), no stored secret. It requires a Trusted Publishing policy
+# for this repository and the workflow file `release.yml` on https://marketplace.visualstudio.com/manage
+# (global Azure DevOps PATs are retired on December 1, 2026).
+# Open VSX: the OVSX_PAT repository secret (access token from https://open-vsx.org/user-settings/tokens).
+
 on:
   push:
     tags:
       - 'v*.*.*'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
-    name: Build & Package
+    name: Test and package
     runs-on: ubuntu-latest
-    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linting
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test:grammar
-
-      - name: Compile
-        run: npm run compile
-
-      - name: Package extension
-        run: npm run package
-
-      - name: Get version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Tag matches package.json version
+        id: version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "${tag%%-*}" != "$pkg" ]; then
+            echo "::error::Tag v$tag does not match package.json version $pkg"
+            exit 1
+          fi
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
+      - run: npm run lint
+      - run: npm run check:grammars
+      - run: npm run compile
+      - run: npm run test:unit
+      - run: npm run test:grammar
+      - run: xvfb-run -a npm run test:integration
+      - run: npx vsce package --out rego-syntax-support-${{ steps.version.outputs.version }}.vsix
+      - uses: actions/upload-artifact@v7
         with:
-          name: Release v${{ steps.get_version.outputs.VERSION }}
-          body: |
-            ## Rego Syntax Support v${{ steps.get_version.outputs.VERSION }}
-            
-            ### Installation
-            
-            **From VS Code:**
-            1. Open Extensions (Ctrl+Shift+X)
-            2. Search for "Rego Syntax Support"
-            3. Click Install
-            
-            **From VSIX:**
-            ```bash
-            code --install-extension rego-syntax-support-${{ steps.get_version.outputs.VERSION }}.vsix
-            ```
-            
-            See [CHANGELOG.md](CHANGELOG.md) for details.
-          files: |
-            *.vsix
-          draft: false
-          prerelease: ${{ contains(github.ref, '-') }}
+          name: vsix
+          path: '*.vsix'
 
-  publish-vscode:
-    name: Publish to VS Code Marketplace
+  github-release:
+    name: GitHub Release
     runs-on: ubuntu-latest
     needs: build
-    if: "!contains(github.ref, '-')"
-    
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/download-artifact@v8
         with:
-          node-version: 20
-          cache: 'npm'
+          name: vsix
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: v${{ needs.build.outputs.version }}
+          files: '*.vsix'
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
 
-      - name: Install dependencies
-        run: npm ci
+  publish-marketplace:
+    name: Publish to the VS Code Marketplace
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ !contains(github.ref_name, '-') }}
+    permissions:
+      contents: read
+      id-token: write # OIDC token exchanged by `vsce publish --oidc`
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+      - run: npx vsce publish --oidc --packagePath rego-syntax-support-${{ needs.build.outputs.version }}.vsix
 
-      - name: Compile
-        run: npm run compile
-
-      - name: Publish to VS Code Marketplace
-        run: npx vsce publish -p ${{ secrets.VSCE_PAT }}
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-
-  publish-ovsx:
+  publish-open-vsx:
     name: Publish to Open VSX
     runs-on: ubuntu-latest
     needs: build
-    if: "!contains(github.ref, '-')"
-    continue-on-error: true
-    
+    if: ${{ !contains(github.ref_name, '-') }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Compile
-        run: npm run compile
-
-      - name: Publish to Open VSX
-        run: npx ovsx publish -p ${{ secrets.OVSX_PAT }}
+          node-version: 24
+      - uses: actions/download-artifact@v8
+        with:
+          name: vsix
+      - run: npx --yes ovsx@1.3.0 publish rego-syntax-support-${{ needs.build.outputs.version }}.vsix
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}

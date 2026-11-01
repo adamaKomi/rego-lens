@@ -2,29 +2,14 @@ import * as path from 'path';
 import Mocha from 'mocha';
 import { glob } from 'glob';
 
+/** Entry point loaded by VS Code (--extensionTestsPath): runs the integration tests of this folder only. */
 export async function run(): Promise<void> {
-  // Create the mocha test
-  const mocha = new Mocha({
-    ui: 'tdd',
-    color: true,
-    timeout: 10000,
-  });
+  const mocha = new Mocha({ ui: 'tdd', color: true, timeout: 30000 });
+  const files = await glob('*.test.js', { cwd: __dirname });
+  files.sort().forEach((f) => mocha.addFile(path.resolve(__dirname, f)));
 
-  const testsRoot = path.resolve(__dirname, '..');
-
-  const files = await glob('**/**.test.js', { cwd: testsRoot });
-
-  // Add files to the test suite
-  files.forEach((f) => mocha.addFile(path.resolve(testsRoot, f)));
-
-  // Run the mocha test
-  return new Promise((resolve, reject) => {
-    mocha.run((failures: number) => {
-      if (failures > 0) {
-        reject(new Error(`${failures} tests failed.`));
-      } else {
-        resolve();
-      }
-    });
-  });
+  const failures = await new Promise<number>((resolve) => mocha.run(resolve));
+  if (failures > 0) {
+    throw new Error(`${failures} integration test(s) failed.`);
+  }
 }

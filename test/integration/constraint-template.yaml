@@ -1,0 +1,16 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredlabels
+spec:
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredlabels
+
+        violation contains {"msg": "missing labels"} if {
+          count(input.review.object.metadata.labels) == 0
+        }
+      libs:
+        - |
+          package lib.helpers
