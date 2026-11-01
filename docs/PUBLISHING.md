@@ -46,6 +46,9 @@ Update the `publisher` field in `package.json`:
 
 ### Local Publishing
 
+> Publishing from a workstation relies on an Azure DevOps PAT. Global PATs are retired on
+> December 1, 2026: prefer the GitHub Actions release below.
+
 ```bash
 # Login to vsce
 npx vsce login YOUR_PUBLISHER_NAME
@@ -56,11 +59,20 @@ npm run publish
 
 ### CI/CD Publishing (GitHub Actions)
 
-1. Add secrets to your GitHub repository:
-   - `VSCE_PAT`: Your Azure DevOps PAT
-   - `OVSX_PAT`: Your Open VSX PAT (optional)
+1. VS Code Marketplace: create a **Trusted Publishing** policy (no secret to store). Global Azure DevOps
+   PATs are retired on December 1, 2026
+   ([official guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-with-github-actions-and-trusted-publishing)).
+   On <https://marketplace.visualstudio.com/manage>, open the publisher, select **Trusted Publishing** > **Create**:
+   - Repository owner: `adamaKomi`
+   - Repository: `rego-syntax-support`
+   - Workflow: `release.yml`
+   - Environment: leave empty
+2. Open VSX (optional): add the repository secret `OVSX_PAT` with an access token from
+   <https://open-vsx.org/user-settings/tokens>. The namespace must exist first:
+   `npx ovsx create-namespace AdamaKomi -p <token>`. Without this secret the Open VSX job fails, but it does
+   not block the other jobs.
 
-2. Merge to `main`, then push a tag that matches the `version` of `package.json`:
+3. Merge to `main`, then push a tag that matches the `version` of `package.json`:
 
 ```bash
 git tag v0.2.0

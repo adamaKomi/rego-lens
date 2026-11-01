@@ -1,8 +1,13 @@
 name: Release
 
 # Pushing a tag vX.Y.Z (matching package.json) builds the extension once, then publishes that
-# exact .vsix to GitHub Releases, the VS Code Marketplace (VSCE_PAT) and Open VSX (OVSX_PAT).
+# exact .vsix to GitHub Releases, the VS Code Marketplace and Open VSX.
 # Tags with a suffix (v1.2.3-rc.1) only create a GitHub pre-release.
+#
+# Marketplace: Trusted Publishing (OIDC), no stored secret. It requires a Trusted Publishing policy
+# for this repository and the workflow file `release.yml` on https://marketplace.visualstudio.com/manage
+# (global Azure DevOps PATs are retired on December 1, 2026).
+# Open VSX: the OVSX_PAT repository secret (access token from https://open-vsx.org/user-settings/tokens).
 
 on:
   push:
@@ -69,6 +74,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: ${{ !contains(github.ref_name, '-') }}
+    permissions:
+      contents: read
+      id-token: write # OIDC token exchanged by `vsce publish --oidc`
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -79,9 +87,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: vsix
-      - run: npx vsce publish --packagePath rego-syntax-support-${{ needs.build.outputs.version }}.vsix
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      - run: npx vsce publish --oidc --packagePath rego-syntax-support-${{ needs.build.outputs.version }}.vsix
 
   publish-open-vsx:
     name: Publish to Open VSX
