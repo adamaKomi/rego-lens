@@ -10,8 +10,6 @@ scripts/**
 .prettierrc
 .gitignore
 .editorconfig
-.huskyrc.json
-.lintstagedrc.json
 tsconfig.json
 *.map
 
