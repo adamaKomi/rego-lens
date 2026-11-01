@@ -1,52 +1,63 @@
-# SYNTAX TEST "source.rego" "Rego Operators Test"
+# SYNTAX TEST "source.rego" "Operators and comprehensions"
 
 package test.operators
 
-# Assignment operators
 val1 := "assigned"
 #    ^^ keyword.operator.assignment.rego
 
 val2 = "unified"
-#    ^ keyword.operator.assignment.rego
+#    ^ keyword.operator.unification.rego
 
-# Comparison operators
-cmp1 := x == y
-#         ^^ keyword.operator.comparison.rego
+cmp if {
+    x == y
+#     ^^ keyword.operator.comparison.rego
+    x != y
+#     ^^ keyword.operator.comparison.rego
+    x < y
+#     ^ keyword.operator.comparison.rego
+    x > y
+#     ^ keyword.operator.comparison.rego
+    x <= y
+#     ^^ keyword.operator.comparison.rego
+    x >= y
+#     ^^ keyword.operator.comparison.rego
+    [a, b] = [1, 2]
+#          ^ keyword.operator.unification.rego
+}
 
-cmp2 := x != y
-#         ^^ keyword.operator.comparison.rego
+arith := ((a + b) - (c * d)) / (e % f)
+#            ^ keyword.operator.arithmetic.rego
+#                 ^ keyword.operator.arithmetic.rego
+#                      ^ keyword.operator.arithmetic.rego
+#                            ^ keyword.operator.arithmetic.rego
+#                                 ^ keyword.operator.arithmetic.rego
 
-cmp3 := x < y
-#         ^ keyword.operator.comparison.rego
+inter := s1 & s2
+#           ^ keyword.operator.set.rego
 
-cmp4 := x > y
-#         ^ keyword.operator.comparison.rego
+union := s1 | s2
+#           ^ keyword.operator.set.rego
 
-cmp5 := x <= y
-#         ^^ keyword.operator.comparison.rego
+arr := [x | some x in input.xs; x > 1]
+#         ^ keyword.operator.comprehension.rego
+#                             ^ punctuation.terminator.statement.rego
 
-cmp6 := x >= y
-#         ^^ keyword.operator.comparison.rego
+arr_union := [x | x := s1 | s2]
+#               ^ keyword.operator.comprehension.rego
+#                         ^ keyword.operator.set.rego
 
-# Arithmetic operators
-arith1 := a + b
-#           ^ keyword.operator.arithmetic.rego
+set_compr := {x | some x in input.xs}
+#               ^ keyword.operator.comprehension.rego
 
-arith2 := a - b
-#           ^ keyword.operator.arithmetic.rego
+obj_compr := {k: v | some k, v in input.obj}
+#              ^ punctuation.separator.key-value.rego
+#                  ^ keyword.operator.comprehension.rego
 
-arith3 := a * b
-#           ^ keyword.operator.arithmetic.rego
+obj := {"a": 1, "b": [1, 2]}
+#          ^ punctuation.separator.key-value.rego
+#             ^ punctuation.separator.comma.rego
 
-arith4 := a / b
-#           ^ keyword.operator.arithmetic.rego
-
-arith5 := a % b
-#           ^ keyword.operator.arithmetic.rego
-
-# Logical operators
-logic1 := set1 & set2
-#              ^ keyword.operator.logical.rego
-
-logic2 := set1 | set2
-#              ^ keyword.operator.logical.rego
+ref := input.a.b["c"][0]
+#           ^ punctuation.accessor.rego
+#               ^ punctuation.section.brackets.begin.rego
+#                   ^ punctuation.section.brackets.end.rego

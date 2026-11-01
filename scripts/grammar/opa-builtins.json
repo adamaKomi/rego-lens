@@ -1,0 +1,939 @@
+{
+  "opaVersion": "v1.22.0",
+  "sources": [
+    "https://raw.githubusercontent.com/open-policy-agent/opa/v1.22.0/capabilities/v1.22.0.json",
+    "https://raw.githubusercontent.com/open-policy-agent/opa/v1.22.0/builtin_metadata.json"
+  ],
+  "builtins": [
+    {
+      "name": "abs",
+      "category": "numbers",
+      "deprecated": false
+    },
+    {
+      "name": "all",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "any",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "array.concat",
+      "category": "array",
+      "deprecated": false
+    },
+    {
+      "name": "array.flatten",
+      "category": "array",
+      "deprecated": false
+    },
+    {
+      "name": "array.reverse",
+      "category": "array",
+      "deprecated": false
+    },
+    {
+      "name": "array.slice",
+      "category": "array",
+      "deprecated": false
+    },
+    {
+      "name": "base64.decode",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "base64.encode",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "base64.is_valid",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "base64url.decode",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "base64url.encode",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "base64url.encode_no_pad",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "bits.and",
+      "category": "bits",
+      "deprecated": false
+    },
+    {
+      "name": "bits.lsh",
+      "category": "bits",
+      "deprecated": false
+    },
+    {
+      "name": "bits.negate",
+      "category": "bits",
+      "deprecated": false
+    },
+    {
+      "name": "bits.or",
+      "category": "bits",
+      "deprecated": false
+    },
+    {
+      "name": "bits.rsh",
+      "category": "bits",
+      "deprecated": false
+    },
+    {
+      "name": "bits.xor",
+      "category": "bits",
+      "deprecated": false
+    },
+    {
+      "name": "cast_array",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "cast_boolean",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "cast_null",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "cast_object",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "cast_set",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "cast_string",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "ceil",
+      "category": "numbers",
+      "deprecated": false
+    },
+    {
+      "name": "concat",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "contains",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "count",
+      "category": "aggregates",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.hmac.equal",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.hmac.md5",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.hmac.sha1",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.hmac.sha256",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.hmac.sha512",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.md5",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.parse_private_keys",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.sha1",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.sha256",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.x509.parse_and_verify_certificates",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.x509.parse_and_verify_certificates_with_options",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.x509.parse_certificate_request",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.x509.parse_certificates",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.x509.parse_keypair",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "crypto.x509.parse_rsa_private_key",
+      "category": "crypto",
+      "deprecated": false
+    },
+    {
+      "name": "endswith",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "floor",
+      "category": "numbers",
+      "deprecated": false
+    },
+    {
+      "name": "format_int",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "glob.match",
+      "category": "glob",
+      "deprecated": false
+    },
+    {
+      "name": "glob.quote_meta",
+      "category": "glob",
+      "deprecated": false
+    },
+    {
+      "name": "graph.reachable",
+      "category": "graph",
+      "deprecated": false
+    },
+    {
+      "name": "graph.reachable_paths",
+      "category": "graph",
+      "deprecated": false
+    },
+    {
+      "name": "graphql.is_valid",
+      "category": "graphql",
+      "deprecated": false
+    },
+    {
+      "name": "graphql.parse",
+      "category": "graphql",
+      "deprecated": false
+    },
+    {
+      "name": "graphql.parse_and_verify",
+      "category": "graphql",
+      "deprecated": false
+    },
+    {
+      "name": "graphql.parse_query",
+      "category": "graphql",
+      "deprecated": false
+    },
+    {
+      "name": "graphql.parse_schema",
+      "category": "graphql",
+      "deprecated": false
+    },
+    {
+      "name": "graphql.schema_is_valid",
+      "category": "graphql",
+      "deprecated": false
+    },
+    {
+      "name": "hex.decode",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "hex.encode",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "http.send",
+      "category": "http",
+      "deprecated": false
+    },
+    {
+      "name": "indexof",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "indexof_n",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "intersection",
+      "category": "sets",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.decode",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.decode_verify",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.encode_sign",
+      "category": "tokensign",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.encode_sign_raw",
+      "category": "tokensign",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_eddsa",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_es256",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_es384",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_es512",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_hs256",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_hs384",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_hs512",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_ps256",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_ps384",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_ps512",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_rs256",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_rs384",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "io.jwt.verify_rs512",
+      "category": "tokens",
+      "deprecated": false
+    },
+    {
+      "name": "is_array",
+      "category": "types",
+      "deprecated": false
+    },
+    {
+      "name": "is_boolean",
+      "category": "types",
+      "deprecated": false
+    },
+    {
+      "name": "is_null",
+      "category": "types",
+      "deprecated": false
+    },
+    {
+      "name": "is_number",
+      "category": "types",
+      "deprecated": false
+    },
+    {
+      "name": "is_object",
+      "category": "types",
+      "deprecated": false
+    },
+    {
+      "name": "is_set",
+      "category": "types",
+      "deprecated": false
+    },
+    {
+      "name": "is_string",
+      "category": "types",
+      "deprecated": false
+    },
+    {
+      "name": "json.filter",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "json.is_valid",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "json.marshal",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "json.marshal_with_options",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "json.match_schema",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "json.patch",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "json.remove",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "json.unmarshal",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "json.verify_schema",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "lower",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "max",
+      "category": "aggregates",
+      "deprecated": false
+    },
+    {
+      "name": "min",
+      "category": "aggregates",
+      "deprecated": false
+    },
+    {
+      "name": "net.cidr_contains",
+      "category": "net",
+      "deprecated": false
+    },
+    {
+      "name": "net.cidr_contains_matches",
+      "category": "net",
+      "deprecated": false
+    },
+    {
+      "name": "net.cidr_expand",
+      "category": "net",
+      "deprecated": false
+    },
+    {
+      "name": "net.cidr_intersects",
+      "category": "net",
+      "deprecated": false
+    },
+    {
+      "name": "net.cidr_is_valid",
+      "category": "net",
+      "deprecated": false
+    },
+    {
+      "name": "net.cidr_merge",
+      "category": "net",
+      "deprecated": false
+    },
+    {
+      "name": "net.cidr_overlap",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "net.lookup_ip_addr",
+      "category": "net",
+      "deprecated": false
+    },
+    {
+      "name": "numbers.range",
+      "category": "numbers",
+      "deprecated": false
+    },
+    {
+      "name": "numbers.range_step",
+      "category": "numbers",
+      "deprecated": false
+    },
+    {
+      "name": "object.filter",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "object.get",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "object.keys",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "object.remove",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "object.subset",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "object.union",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "object.union_n",
+      "category": "object",
+      "deprecated": false
+    },
+    {
+      "name": "opa.runtime",
+      "category": "opa",
+      "deprecated": false
+    },
+    {
+      "name": "print",
+      "category": "builtin",
+      "deprecated": false
+    },
+    {
+      "name": "product",
+      "category": "aggregates",
+      "deprecated": false
+    },
+    {
+      "name": "providers.aws.sign_req",
+      "category": "providers.aws",
+      "deprecated": false
+    },
+    {
+      "name": "rand.intn",
+      "category": "numbers",
+      "deprecated": false
+    },
+    {
+      "name": "re_match",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "regex.find_all_string_submatch_n",
+      "category": "regex",
+      "deprecated": false
+    },
+    {
+      "name": "regex.find_n",
+      "category": "regex",
+      "deprecated": false
+    },
+    {
+      "name": "regex.globs_match",
+      "category": "regex",
+      "deprecated": false
+    },
+    {
+      "name": "regex.is_valid",
+      "category": "regex",
+      "deprecated": false
+    },
+    {
+      "name": "regex.match",
+      "category": "regex",
+      "deprecated": false
+    },
+    {
+      "name": "regex.replace",
+      "category": "regex",
+      "deprecated": false
+    },
+    {
+      "name": "regex.split",
+      "category": "regex",
+      "deprecated": false
+    },
+    {
+      "name": "regex.template_match",
+      "category": "regex",
+      "deprecated": false
+    },
+    {
+      "name": "rego.metadata.chain",
+      "category": "rego",
+      "deprecated": false
+    },
+    {
+      "name": "rego.metadata.rule",
+      "category": "rego",
+      "deprecated": false
+    },
+    {
+      "name": "rego.parse_module",
+      "category": "rego",
+      "deprecated": false
+    },
+    {
+      "name": "replace",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "round",
+      "category": "numbers",
+      "deprecated": false
+    },
+    {
+      "name": "semver.compare",
+      "category": "semver",
+      "deprecated": false
+    },
+    {
+      "name": "semver.is_valid",
+      "category": "semver",
+      "deprecated": false
+    },
+    {
+      "name": "set_diff",
+      "category": "builtin",
+      "deprecated": true
+    },
+    {
+      "name": "sort",
+      "category": "aggregates",
+      "deprecated": false
+    },
+    {
+      "name": "split",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "sprintf",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "startswith",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "strings.any_prefix_match",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "strings.any_suffix_match",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "strings.count",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "strings.render_template",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "strings.replace_n",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "strings.reverse",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "strings.split_n",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "substring",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "sum",
+      "category": "aggregates",
+      "deprecated": false
+    },
+    {
+      "name": "time.add_date",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.clock",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.date",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.diff",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.format",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.now_ns",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.parse_duration_ns",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.parse_ns",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.parse_rfc3339_ns",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "time.weekday",
+      "category": "time",
+      "deprecated": false
+    },
+    {
+      "name": "to_number",
+      "category": "conversions",
+      "deprecated": false
+    },
+    {
+      "name": "trace",
+      "category": "tracing",
+      "deprecated": false
+    },
+    {
+      "name": "trim",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "trim_left",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "trim_prefix",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "trim_right",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "trim_space",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "trim_suffix",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "type_name",
+      "category": "types",
+      "deprecated": false
+    },
+    {
+      "name": "union",
+      "category": "sets",
+      "deprecated": false
+    },
+    {
+      "name": "units.parse",
+      "category": "units",
+      "deprecated": false
+    },
+    {
+      "name": "units.parse_bytes",
+      "category": "units",
+      "deprecated": false
+    },
+    {
+      "name": "upper",
+      "category": "strings",
+      "deprecated": false
+    },
+    {
+      "name": "uri.is_valid",
+      "category": "uri",
+      "deprecated": false
+    },
+    {
+      "name": "uri.parse",
+      "category": "uri",
+      "deprecated": false
+    },
+    {
+      "name": "urlquery.decode",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "urlquery.decode_object",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "urlquery.encode",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "urlquery.encode_object",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "uuid.parse",
+      "category": "uuid",
+      "deprecated": false
+    },
+    {
+      "name": "uuid.rfc4122",
+      "category": "uuid",
+      "deprecated": false
+    },
+    {
+      "name": "walk",
+      "category": "graph",
+      "deprecated": false
+    },
+    {
+      "name": "yaml.is_valid",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "yaml.marshal",
+      "category": "encoding",
+      "deprecated": false
+    },
+    {
+      "name": "yaml.unmarshal",
+      "category": "encoding",
+      "deprecated": false
+    }
+  ]
+}

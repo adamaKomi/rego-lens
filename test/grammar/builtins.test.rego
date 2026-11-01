@@ -1,114 +1,76 @@
-# SYNTAX TEST "source.rego" "Rego Built-in Functions Test"
+# SYNTAX TEST "source.rego" "Built-in functions (generated from OPA capabilities)"
 
 package test.builtins
 
-# Aggregate functions
-agg1 := count(array)
-#       ^^^^^ support.function.aggregate.rego
+agg := count(input.items) + sum([1, 2]) + max([1]) + min([1]) + product([1])
+#      ^^^^^ support.function.aggregates.rego
+#                           ^^^ support.function.aggregates.rego
+#                                         ^^^ support.function.aggregates.rego
+#                                                    ^^^ support.function.aggregates.rego
+#                                                               ^^^^^^^ support.function.aggregates.rego
 
-agg2 := sum([1, 2, 3])
-#       ^^^ support.function.aggregate.rego
+str := sprintf("%s", [concat(",", split(lower(upper("A")), ","))])
+#      ^^^^^^^ support.function.strings.rego
+#                     ^^^^^^ support.function.strings.rego
+#                                 ^^^^^ support.function.strings.rego
+#                                       ^^^^^ support.function.strings.rego
+#                                             ^^^^^ support.function.strings.rego
 
-agg3 := max(numbers)
-#       ^^^ support.function.aggregate.rego
+dotted := [io.jwt.decode(t), crypto.x509.parse_certificates(c), providers.aws.sign_req(r, k, n)]
+#          ^^^^^^^^^^^^^ support.function.tokens.rego
+#                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ support.function.crypto.rego
+#                                                               ^^^^^^^^^^^^^^^^^^^^^^ support.function.providers.aws.rego
 
-agg4 := min(numbers)
-#       ^^^ support.function.aggregate.rego
+recent := [strings.render_template(t, v), array.flatten(a), json.match_schema(d, s)]
+#          ^^^^^^^^^^^^^^^^^^^^^^^ support.function.strings.rego
+#                                         ^^^^^^^^^^^^^ support.function.array.rego
+#                                                           ^^^^^^^^^^^^^^^^^ support.function.object.rego
 
-agg5 := sort(items)
-#       ^^^^ support.function.aggregate.rego
+more := [regex.match(p, s), time.now_ns(), net.cidr_contains(c, i), http.send(r), is_string(x)]
+#        ^^^^^^^^^^^ support.function.regex.rego
+#                           ^^^^^^^^^^^ support.function.time.rego
+#                                          ^^^^^^^^^^^^^^^^^ support.function.net.rego
+#                                                                   ^^^^^^^^^ support.function.http.rego
+#                                                                                 ^^^^^^^^^ support.function.types.rego
 
-# String functions
-str1 := concat("-", parts)
-#       ^^^^^^ support.function.string.rego
+spaced := count (input.items)
+#         ^^^^^ support.function.aggregates.rego
 
-str2 := contains(haystack, needle)
-#       ^^^^^^^^ support.function.string.rego
-
-str3 := startswith(str, prefix)
-#       ^^^^^^^^^^ support.function.string.rego
-
-str4 := endswith(str, suffix)
-#       ^^^^^^^^ support.function.string.rego
-
-str5 := lower(text)
-#       ^^^^^ support.function.string.rego
-
-str6 := upper(text)
-#       ^^^^^ support.function.string.rego
-
-str7 := sprintf("%s: %d", [name, count])
-#       ^^^^^^^ support.function.string.rego
-
-str8 := split(text, ",")
-#       ^^^^^ support.function.string.rego
-
-# Type checking
-type1 := is_string(val)
-#        ^^^^^^^^^ support.function.type.rego
-
-type2 := is_array(val)
-#        ^^^^^^^^ support.function.type.rego
-
-type3 := is_object(val)
-#        ^^^^^^^^^ support.function.type.rego
-
-type4 := is_number(val)
-#        ^^^^^^^^^ support.function.type.rego
-
-type5 := is_boolean(val)
-#        ^^^^^^^^^^ support.function.type.rego
-
-type6 := type_name(val)
-#        ^^^^^^^^^ support.function.type.rego
-
-# Number functions
-num1 := abs(-5)
-#       ^^^ support.function.numbers.rego
-
-num2 := ceil(3.2)
-#       ^^^^ support.function.numbers.rego
-
-num3 := floor(3.8)
-#       ^^^^^ support.function.numbers.rego
-
-num4 := round(3.5)
-#       ^^^^^ support.function.numbers.rego
-
-# Time functions
-time1 := time.now_ns()
-#        ^^^^^^^^^^^ support.function.time.rego
-
-time2 := time.parse_rfc3339_ns(str)
-#        ^^^^^^^^^^^^^^^^^^^^^ support.function.time.rego
-
-# Crypto functions
-crypto1 := crypto.sha256(data)
-#          ^^^^^^^^^^^^^ support.function.crypto.rego
-
-crypto2 := crypto.md5(data)
-#          ^^^^^^^^^^ support.function.crypto.rego
-
-# HTTP
-http1 := http.send(request)
-#        ^^^^^^^^^ support.function.http.rego
-
-# Network
-net1 := net.cidr_contains(cidr, ip)
-#       ^^^^^^^^^^^^^^^^^ support.function.net.rego
-
-# Debugging
 debug if {
-    print("debug message")
-#   ^^^^^ support.function.tracing.rego
-    trace("trace point")
+    print("x", 1)
+#   ^^^^^ support.function.builtin.rego
+    trace("y")
 #   ^^^^^ support.function.tracing.rego
 }
 
-# Special variables
-check if {
-    input.user == "admin"
-#   ^^^^^ variable.language.input.rego
-    data.policies[_]
-#   ^^^^ variable.language.data.rego
-}
+# Deprecated built-ins were removed from Rego v1 (OPA 1.0)
+old := [any(xs), all(xs), re_match(p, s), set_diff(a, b), cast_string(x), net.cidr_overlap(c, i)]
+#       ^^^ invalid.deprecated.builtin.rego
+#                ^^^ invalid.deprecated.builtin.rego
+#                         ^^^^^^^^ invalid.deprecated.builtin.rego
+#                                         ^^^^^^^^ invalid.deprecated.builtin.rego
+#                                                         ^^^^^^^^^^^ invalid.deprecated.builtin.rego
+#                                                                         ^^^^^^^^^^^^^^^^ invalid.deprecated.builtin.rego
+
+# A built-in name that is not called is not a built-in call
+fields := [input.count, input.sum, count, data.http.send]
+#                ^^^^^ - support.function.aggregates.rego
+#                             ^^^ - support.function.aggregates.rego
+#                                  ^^^^^ - support.function.aggregates.rego
+#                                                   ^^^^ - support.function.http.rego
+
+# A function with a built-in's name under another namespace is a user function
+custom := [data.lib.count(x), input.user.lower(y), mylib.sprintf(z)]
+#                   ^^^^^ entity.name.function.call.rego - support.function.aggregates.rego
+#                                        ^^^^^ entity.name.function.call.rego - support.function.strings.rego
+#                                                        ^^^^^^^ entity.name.function.call.rego - support.function.strings.rego
+
+user_calls := [is_admin(input.user), data.authz.allowed(input)]
+#              ^^^^^^^^ entity.name.function.call.rego
+#                                               ^^^^^^^ entity.name.function.call.rego
+
+# Prefix of a real built-in name
+prefixes := [counter(x), sprintfx(y), time.now_ns_extra(z)]
+#            ^^^^^^^ entity.name.function.call.rego - support.function.aggregates.rego
+#                        ^^^^^^^^ entity.name.function.call.rego - support.function.strings.rego
+#                                          ^^^^^^^^^^^^ - support.function.time.rego
