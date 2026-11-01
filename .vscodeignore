@@ -17,7 +17,7 @@ tsconfig.json
 
 # Build/Dev files
 node_modules/**
-out/test/**
+out/**
 coverage/**
 .nyc_output/**
 

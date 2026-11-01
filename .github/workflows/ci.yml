@@ -2,112 +2,130 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Keep in sync with scripts/grammar/opa-builtins.json (`npm run update:builtins`).
+  OPA_VERSION: 1.22.0
+
 jobs:
-  build:
-    name: Build & Test
-    runs-on: ${{ matrix.os }}
+  checks:
+    name: Lint, unit and grammar tests (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
     strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18, 20]
       fail-fast: false
-
+      matrix:
+        node-version: [22, 24]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linting
+          cache: npm
+      - run: npm ci
+      - name: Formatting
+        run: npm run format:check
+      - name: Lint
         run: npm run lint
-
-      - name: Compile TypeScript
-        run: npm run compile
-
-      - name: Run grammar tests
-        run: npm run test:grammar
-
-      - name: Run unit tests (Linux)
-        if: runner.os == 'Linux'
-        run: xvfb-run -a npm test
-
-      - name: Run unit tests (Windows/macOS)
-        if: runner.os != 'Linux'
-        run: npm test
-
-  package:
-    name: Package Extension
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
+      - name: Generated grammars are up to date
+        run: npm run check:grammars
       - name: Compile
         run: npm run compile
+      - name: Unit tests
+        run: npm run test:unit
+      - name: Grammar assertion tests
+        run: npm run test:grammar
 
-      - name: Package extension
-        run: npm run package
+  opa:
+    name: Rego files are accepted by OPA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Expand the snippets (written to out/snippets-check)
+        run: npm run compile && npm run test:unit
+      - uses: open-policy-agent/setup-opa@v2
+        with:
+          version: ${{ env.OPA_VERSION }}
+      - name: opa parse
+        run: |
+          opa version
+          status=0
+          for file in test/fixtures/*.rego test/integration/*.rego out/snippets-check/*.rego; do
+            if opa parse "$file" > /dev/null; then
+              echo "ok      $file"
+            else
+              echo "::error file=$file::opa parse failed"
+              status=1
+            fi
+          done
+          exit $status
+      - name: Built-ins match the OPA binary
+        run: |
+          opa capabilities --current \
+            | jq -r '.builtins[] | select(.infix == null) | .name | select(startswith("internal.") | not)' \
+            | sort > /tmp/opa-builtins.txt
+          jq -r '.builtins[].name' scripts/grammar/opa-builtins.json | sort > /tmp/grammar-builtins.txt
+          diff -u /tmp/opa-builtins.txt /tmp/grammar-builtins.txt
 
-      - name: Upload VSIX artifact
-        uses: actions/upload-artifact@v4
+  integration:
+    name: VS Code ${{ matrix.vscode }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        vscode: [stable]
+        include:
+          # Oldest version allowed by engines.vscode in package.json.
+          - os: ubuntu-latest
+            vscode: 1.85.0
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run compile
+      - name: Integration tests (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:integration
+        env:
+          VSCODE_VERSION: ${{ matrix.vscode }}
+      - name: Integration tests
+        if: runner.os != 'Linux'
+        run: npm run test:integration
+        env:
+          VSCODE_VERSION: ${{ matrix.vscode }}
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    needs: [checks, opa, integration]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run package
+      - uses: actions/upload-artifact@v7
         with:
           name: rego-syntax-support-vsix
           path: '*.vsix'
           retention-days: 30
-
-  release:
-    name: Publish Release
-    runs-on: ubuntu-latest
-    needs: package
-    if: github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Compile
-        run: npm run compile
-
-      - name: Publish to VS Code Marketplace
-        run: npm run publish
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-
-      - name: Publish to Open VSX
-        run: npx ovsx publish -p ${{ secrets.OVSX_PAT }}
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        continue-on-error: true

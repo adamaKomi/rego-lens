@@ -1,18 +1,18 @@
 import * as path from 'path';
 import { runTests } from '@vscode/test-electron';
 
+/** Downloads VS Code (stable by default, or VSCODE_VERSION) and runs the integration tests in it. */
 async function main(): Promise<void> {
   try {
-    // The folder containing the Extension Manifest package.json
-    const extensionDevelopmentPath = path.resolve(__dirname, '../../');
-
-    // The path to the extension test script
-    const extensionTestsPath = path.resolve(__dirname, './suite/index');
-
-    // Download VS Code, unzip it and run the integration test
-    await runTests({ extensionDevelopmentPath, extensionTestsPath });
+    await runTests({
+      version: process.env.VSCODE_VERSION ?? 'stable',
+      extensionDevelopmentPath: path.resolve(__dirname, '../../'),
+      extensionTestsPath: path.resolve(__dirname, './suite/index'),
+      // Other installed extensions must not interfere (e.g. another Rego grammar).
+      launchArgs: ['--disable-extensions'],
+    });
   } catch (err) {
-    console.error('Failed to run tests:', err);
+    console.error('Failed to run integration tests:', err);
     process.exit(1);
   }
 }

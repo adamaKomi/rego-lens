@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Debug helper: prints the TextMate tokens of a file exactly as VS Code would compute them
+ * Debug helper: prints the TextMate tokens of a file as VS Code computes them
  * (same vscode-textmate / vscode-oniguruma versions, same injection mechanism).
+ * Requires `npm run compile` first.
  *
  *   node scripts/dump-tokens.js <file> [scopeName]
  *
@@ -12,7 +13,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createRegistry } = require('./lib/textmate');
 
 async function main() {
   const [file, scopeArg] = process.argv.slice(2);
@@ -28,20 +28,17 @@ async function main() {
     throw new Error(`Cannot infer the scope of ${file}; pass it explicitly.`);
   }
 
-  const registry = createRegistry();
-  const grammar = await registry.loadGrammar(scope);
-  let stack = null;
-  fs.readFileSync(file, 'utf8')
-    .split(/\r?\n/)
-    .forEach((line, i) => {
-      const { tokens, ruleStack } = grammar.tokenizeLine(line, stack);
-      stack = ruleStack;
-      console.log(`${String(i + 1).padStart(3)}: ${line}`);
-      for (const t of tokens) {
-        const text = line.substring(t.startIndex, t.endIndex);
-        console.log(`       [${t.startIndex}-${t.endIndex}] ${JSON.stringify(text)}  ${t.scopes.slice(1).join(' ')}`);
-      }
-    });
+  const { tokenize } = require('../out/test/unit/helpers/textmate');
+  const { tokens } = await tokenize(fs.readFileSync(file, 'utf8'), scope);
+  let current = 0;
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  for (const t of tokens) {
+    if (t.line !== current) {
+      current = t.line;
+      console.log(`${String(current).padStart(4)}: ${lines[current - 1]}`);
+    }
+    console.log(`      ${JSON.stringify(t.text)}  ${t.scopes.slice(1).join(' ')}`);
+  }
 }
 
 main().catch((err) => {
