@@ -1,7 +1,7 @@
 # Rego Lens
 
 [![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/AdamaKomi.rego-syntax-support?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=AdamaKomi.rego-syntax-support)
-[![CI](https://github.com/adamaKomi/rego-syntax-support/actions/workflows/ci.yml/badge.svg)](https://github.com/adamaKomi/rego-syntax-support/actions/workflows/ci.yml)
+[![CI](https://github.com/adamaKomi/rego-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/adamaKomi/rego-lens/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Syntax highlighting and snippets for [Open Policy Agent](https://www.openpolicyagent.org/) **Rego**,
@@ -102,7 +102,7 @@ This order is not configurable. The YAML and Markdown injections of this extensi
 ## Installation
 
 - **Marketplace**: search for "Rego Lens" in the Extensions view (`Ctrl+Shift+X` / `Cmd+Shift+X`).
-- **VSIX**: download it from the [releases](https://github.com/adamaKomi/rego-syntax-support/releases) and run
+- **VSIX**: download it from the [releases](https://github.com/adamaKomi/rego-lens/releases) and run
   `code --install-extension rego-syntax-support-<version>.vsix`.
 
 Requires VS Code 1.85 or later.
