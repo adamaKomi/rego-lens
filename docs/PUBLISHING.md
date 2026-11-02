@@ -1,6 +1,6 @@
 # Publishing Guide
 
-This guide explains how to publish the Rego Syntax Support extension.
+This guide explains how to publish the Rego Lens extension.
 
 ## Prerequisites
 

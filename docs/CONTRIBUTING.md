@@ -1,6 +1,6 @@
-# Contributing to Rego Syntax Support
+# Contributing to Rego Lens
 
-First off, thank you for considering contributing to Rego Syntax Support!
+First off, thank you for considering contributing to Rego Lens!
 
 ## Code of Conduct
 
