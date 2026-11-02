@@ -1,4 +1,4 @@
-# Rego Lens
+# Rego Syntax Support
 
 [![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/AdamaKomi.rego-syntax-support?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=AdamaKomi.rego-syntax-support)
 [![CI](https://github.com/adamaKomi/rego-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/adamaKomi/rego-lens/actions/workflows/ci.yml)
@@ -7,8 +7,6 @@
 Syntax highlighting and snippets for [Open Policy Agent](https://www.openpolicyagent.org/) **Rego**,
 **including Rego embedded in Kubernetes YAML** (Gatekeeper `ConstraintTemplate`, ConfigMaps) and in
 **Markdown**.
-
-Formerly published as *Rego Syntax Support*: same extension, same identifier (`AdamaKomi.rego-syntax-support`), updates continue.
 
 - Up to date with Rego v1 and OPA 1.22: string interpolation, `and` / `or`, `rego.v2`, METADATA blocks.
 - Built-in functions generated from OPA's own capabilities, deprecated ones flagged.
@@ -101,7 +99,7 @@ This order is not configurable. The YAML and Markdown injections of this extensi
 
 ## Installation
 
-- **Marketplace**: search for "Rego Lens" in the Extensions view (`Ctrl+Shift+X` / `Cmd+Shift+X`).
+- **Marketplace**: search for "Rego Syntax Support" in the Extensions view (`Ctrl+Shift+X` / `Cmd+Shift+X`).
 - **VSIX**: download it from the [releases](https://github.com/adamaKomi/rego-lens/releases) and run
   `code --install-extension rego-syntax-support-<version>.vsix`.
 
