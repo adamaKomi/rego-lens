@@ -1,6 +1,6 @@
 # Mutation testing for Rego: specification
 
-Status: draft, v0.3 (2026-11-02). Engine: `regodrill`. Editor integration: the Rego Lens extension (this repository).
+Status: draft, v0.3 (2026-11-02). Engine: `regodrill`. Editor integration: the Rego Syntax Support extension (this repository).
 
 ## 1. Goal
 
@@ -259,7 +259,7 @@ The output is accepted by `github/codeql-action/upload-sarif`: survivors appear 
 - **Resources**: each mutant evaluation has the timeout above and the same memory limits as `opa test`. A runaway mutant (for example an infinite recursion it introduces) counts as killed by timeout and never blocks the run.
 - No file is written next to the policies; mutants exist only in memory.
 
-## 11. VS Code integration (Rego Lens, this extension)
+## 11. VS Code integration (Rego Syntax Support, this extension)
 
 The extension stays useful without the binary: syntax highlighting and snippets don't depend on it.
 
@@ -326,11 +326,11 @@ Results: [`docs/spike-m0.md`](https://github.com/adamaKomi/regodrill/blob/main/d
 | M2 Release | goreleaser binaries, `go install`, README with a real example | v0.1.0 tagged |
 | M3 VS Code | §11 | Integration test: open a policy with an incomplete test, run the command, a diagnostic appears at the right line |
 | M4 Action | §12 | Used on a sample repository, alerts visible on a PR |
-| M5 Positioning | Present Rego Lens as the test-quality companion of the official OPA extension; list `regodrill` on the OPA ecosystem page | README and Marketplace page updated, ecosystem PR opened |
+| M5 Positioning | Present Rego Syntax Support as the test-quality companion of the official OPA extension; list `regodrill` on the OPA ecosystem page | README and Marketplace page updated, ecosystem PR opened |
 
 ## 16. Decisions
 
-1. **Names**: the engine, its CLI and its repository are `regodrill`. The name comes from a fire drill: mistakes are set off on purpose to check that the tests react. The editor integration is this extension, displayed as **Rego Lens** (its identifier `AdamaKomi.rego-syntax-support` does not change, so existing installations keep updating). Neither name contains "OPA", so they can't be mistaken for an official OPA project.
+1. **Names**: the engine, its CLI and its repository are `regodrill`. The name comes from a fire drill: mistakes are set off on purpose to check that the tests react. The editor integration is this extension, **Rego Syntax Support** (`AdamaKomi.rego-syntax-support`). A rename to "Rego Lens" was considered and dropped on 2026-11-02: users already installed and trust the current name. Neither name contains "OPA", so they can't be mistaken for an official OPA project; "Open Policy Agent (OPA)" appears in the description and keywords only.
 2. **OPA version**: the engine embeds the latest OPA v1 Go library, so it understands all current syntax (including `and`/`or`) whatever `opa` binary the user has installed. Policies are parsed as Rego v1 by default; `--v0-compatible` parses Rego v0.
 3. **Rego embedded in YAML** (Gatekeeper `ConstraintTemplate`): postponed until after M4. Its tests usually live in gator suites, not in `.rego` test files, so it needs its own design.
 4. **Higher-order or prioritized mutation** (several mutations at once, ranking by rule criticality): out of the MVP, to be revisited after M1 with real data.
