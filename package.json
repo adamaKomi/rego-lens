@@ -1,7 +1,7 @@
 {
   "name": "rego-syntax-support",
-  "displayName": "Rego Syntax Support",
-  "description": "Rego (Open Policy Agent) syntax highlighting and snippets, including Rego embedded in Gatekeeper/Kubernetes YAML and Markdown",
+  "displayName": "Rego Lens",
+  "description": "Open Policy Agent (OPA) Rego highlighting and snippets, including Rego embedded in Gatekeeper/Kubernetes YAML and Markdown",
   "version": "0.2.1",
   "publisher": "AdamaKomi",
   "author": {
@@ -17,6 +17,7 @@
   ],
   "keywords": [
     "rego",
+    "rego lens",
     "opa",
     "open policy agent",
     "policy as code",
