@@ -30,12 +30,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/adamaKomi/rego-syntax-support.git"
+    "url": "https://github.com/adamaKomi/rego-lens.git"
   },
   "bugs": {
-    "url": "https://github.com/adamaKomi/rego-syntax-support/issues"
+    "url": "https://github.com/adamaKomi/rego-lens/issues"
   },
-  "homepage": "https://github.com/adamaKomi/rego-syntax-support#readme",
+  "homepage": "https://github.com/adamaKomi/rego-lens#readme",
   "icon": "resources/icon.png",
   "galleryBanner": {
     "color": "#1e1e1e",
