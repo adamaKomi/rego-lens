@@ -41,8 +41,9 @@ export function getOnigLib(): Promise<vsctm.IOnigLib> {
   if (!onigLib) {
     const wasm = fs.readFileSync(require.resolve('vscode-oniguruma/release/onig.wasm')).buffer;
     onigLib = oniguruma.loadWASM(wasm).then(() => ({
-      createOnigScanner: (sources: string[]) => new oniguruma.OnigScanner(sources),
-      createOnigString: (s: string) => new oniguruma.OnigString(s),
+      createOnigScanner: (sources: string[]): vsctm.OnigScanner =>
+        new oniguruma.OnigScanner(sources),
+      createOnigString: (s: string): vsctm.OnigString => new oniguruma.OnigString(s),
     }));
   }
   return onigLib;

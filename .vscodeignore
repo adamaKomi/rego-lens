@@ -6,7 +6,7 @@ docs/**
 scripts/**
 
 # Config files
-.eslintrc.json
+eslint.config.mjs
 .prettierrc
 .gitignore
 .editorconfig

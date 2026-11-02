@@ -8,11 +8,11 @@ interface Builtin {
   deprecated: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { transform } = require(path.join(ROOT, 'scripts', 'update-builtins.js')) as {
   transform: (capabilities: unknown, metadata: unknown) => Builtin[];
 };
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const data = require(path.join(ROOT, 'scripts', 'grammar', 'opa-builtins.json')) as {
   opaVersion: string;
   builtins: Builtin[];
