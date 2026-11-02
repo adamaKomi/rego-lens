@@ -1,6 +1,6 @@
 # Mutation testing for Rego: specification
 
-Status: draft, v0.3 (2026-11-03). Engine: `regodrill`. Editor integration: the Rego Lens extension (this repository).
+Status: draft, v0.3 (2026-11-02). Engine: `regodrill`. Editor integration: the Rego Lens extension (this repository).
 
 ## 1. Goal
 
