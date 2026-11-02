@@ -68,7 +68,7 @@ npm run publish
    - Workflow: `release.yml`
    - Environment: leave empty
 2. Open VSX: register a **Trusted Publisher** (no secret to store). The namespace `AdamaKomi` must exist.
-   On <https://open-vsx.org/user-settings/trusted-publishers>, add GitHub, repository `adamaKomi/rego-lens`,
+   On <https://open-vsx.org>, open the user settings > **Trusted Publishers** and add GitHub, repository `adamaKomi/rego-lens`,
    workflow `release.yml`, no environment. An extension can have only one trusted publisher, so after a
    repository rename, delete the old registration first, then create the new one. If the Open VSX job fails,
    it does not block the other jobs.
