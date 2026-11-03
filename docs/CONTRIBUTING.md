@@ -127,7 +127,7 @@ Then update `OPA_VERSION` in `.github/workflows/ci.yml` so CI checks against the
 3. Tag and push: `git tag v0.x.y && git push origin v0.x.y`.
 4. The Release workflow checks that the tag matches `package.json`, runs the tests, builds the VSIX once
    and publishes that file to GitHub Releases, the VS Code Marketplace (Trusted Publishing, see
-   [PUBLISHING.md](PUBLISHING.md)) and Open VSX (`OVSX_PAT` secret). Tags with a suffix (`v0.3.0-rc.1`) only
+   [PUBLISHING.md](PUBLISHING.md)) and Open VSX (Trusted Publishing too). Tags with a suffix (`v0.3.0-rc.1`) only
    create a GitHub pre-release.
 
 ## Questions?

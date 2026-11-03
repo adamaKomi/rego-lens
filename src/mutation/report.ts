@@ -18,7 +18,7 @@ export interface ReportMutant {
   original: string;
   replacement: string;
   rule: string;
-  /** Line where the rule definition starts (regodrill after 0.1.0); absent in older reports. */
+  /** Line where the rule definition starts (regodrill 0.2.0 or later); absent in older reports. */
   ruleLine?: number;
   status:
     'killed' | 'timeout' | 'survived' | 'no_coverage' | 'stillborn' | 'equivalent' | 'ignored';

@@ -301,7 +301,7 @@ The extension stays useful without the binary: syntax highlighting and snippets 
 | Diagnostics | One `Warning` per survived mutant, one `Information` per no-coverage mutant, at the exact range, source `regodrill` |
 | Hover | Shows the mutation as a one-line diff, the covering tests and the risk description of the operator |
 | Quick fix | `Ignore this mutant`: inserts `# regodrill:ignore OPERATOR` at the end of the line |
-| CodeLens | Above each rule definition: `allow: 3/5 mutants killed`, from the report's `ruleLine` (regodrill after 0.1.0; no CodeLens with older reports). Hidden in a file once it is edited, until the next run |
+| CodeLens | Above each rule definition: `allow: 3/5 mutants killed`, from the report's `ruleLine` (regodrill 0.2.0 or later; no CodeLens with older reports). Hidden in a file once it is edited, until the next run |
 | Status bar | Last score, click to re-run |
 | Settings | `regoSyntaxSupport.regodrill.path` (binary path; `regodrill` on the `PATH` until a binary is bundled), `regoSyntaxSupport.regodrill.args` (extra flags), `regoSyntaxSupport.regodrill.runOnSave` (default off). The prefix is the extension's own, like its other settings, so it cannot collide with another extension's `rego.*` settings |
 
@@ -309,7 +309,7 @@ The extension stays useful without the binary: syntax highlighting and snippets 
 - **Quick fix**: on a line that already has a comment, the annotation goes on its own line above, as `# regodrill:ignore-next-line OPERATOR`, because an annotation must start its comment.
 - **Web**: the commands are hidden in VS Code for the Web (`!isWeb`); a `browser` entry point keeps the grammars and snippets available there.
 - **Results**: read from the JSON report. If the document changed since the run, diagnostics on edited lines are cleared rather than shown at a wrong position.
-- **Distribution**: one platform-specific VSIX per target (`vsce package --target linux-x64`, etc.), with the binary bundled, so nothing needs to be installed. A universal VSIX without binary is also published, for platforms without one; it uses `rego.mutation.path`. The spike also evaluates a WASM build of the engine (§14).
+- **Distribution**: one platform-specific VSIX per target (`vsce package --target linux-x64`, etc.), with the binary bundled, so nothing needs to be installed. A universal VSIX without binary is also published, for platforms without one; it uses `regoSyntaxSupport.regodrill.path`. The spike also evaluates a WASM build of the engine (§14).
 
 ## 12. GitHub Action
 
@@ -328,7 +328,7 @@ The extension stays useful without the binary: syntax highlighting and snippets 
 ## 13. Distribution of the engine
 
 - Static binaries for linux, darwin and windows on amd64 and arm64, built by goreleaser on each tag, with checksums and build provenance.
-- `go install github.com/adamaKomi/regodrill@latest`.
+- `go install github.com/adamaKomi/regodrill/cmd/regodrill@latest`.
 - A Docker image is a candidate for later, not part of the MVP.
 
 ## 14. Spike (before committing to the MVP)

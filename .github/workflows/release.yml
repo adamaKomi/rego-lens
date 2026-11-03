@@ -7,7 +7,8 @@ name: Release
 # Marketplace: Trusted Publishing (OIDC), no stored secret. It requires a Trusted Publishing policy
 # for this repository and the workflow file `release.yml` on https://marketplace.visualstudio.com/manage
 # (global Azure DevOps PATs are retired on December 1, 2026).
-# Open VSX: the OVSX_PAT repository secret (access token from https://open-vsx.org/user-settings/tokens).
+# Open VSX: Trusted Publishing too (`ovsx publish --trusted-publishing`), registered for this repository
+# and `release.yml` in the Open VSX user settings, so no stored secret either (docs/PUBLISHING.md).
 
 on:
   push:
