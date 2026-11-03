@@ -133,7 +133,10 @@ function entries(lines: Line[]): Entry[] {
           entry.block = block;
           i = block.end - 1;
         } else {
-          while (i + 1 < lines.length && (lines[i + 1].text.trim() === '' || lines[i + 1].indent > indent)) {
+          while (
+            i + 1 < lines.length &&
+            (lines[i + 1].text.trim() === '' || lines[i + 1].indent > indent)
+          ) {
             i++; // skip a folded scalar
           }
         }
@@ -146,7 +149,15 @@ function entries(lines: Line[]): Entry[] {
       // `- |`: a block scalar as a sequence item (an entry of libs). Its parent indent is the marker's.
       const indent = item[1].length;
       const block = readBlock(lines, i + 1, indent, item[2]);
-      out.push({ key: '-', value: item[2], indent, line: lines[i].index, item: true, itemIndent: indent, block });
+      out.push({
+        key: '-',
+        value: item[2],
+        indent,
+        line: lines[i].index,
+        item: true,
+        itemIndent: indent,
+        block,
+      });
       if (block) {
         i = block.end - 1;
       }
@@ -169,7 +180,9 @@ function topLevel(es: Entry[], key: string): string | undefined {
  * separated by `---` are supported). Other documents are ignored.
  */
 export function extractConstraintTemplates(source: string): EmbeddedGroup[] {
-  const all: Line[] = source.split(/\r?\n/).map((text, index) => ({ index, text, indent: indentOf(text) }));
+  const all: Line[] = source
+    .split(/\r?\n/)
+    .map((text, index) => ({ index, text, indent: indentOf(text) }));
   const documents: Line[][] = [[]];
   for (const line of all) {
     if (/^(---|\.\.\.)(\s|$)/.test(line.text)) {
@@ -238,13 +251,22 @@ export function extractConstraintTemplates(source: string): EmbeddedGroup[] {
         const inTargets = path.includes('targets');
         const sourceIndex = path.lastIndexOf('source');
         const libsParent = kind === 'lib' ? path[path.length - 2] : parentKey;
-        if (inTargets && sourceIndex >= 0 && (kind === 'rego' ? parentKey === 'source' : libsParent === 'source')) {
+        if (
+          inTargets &&
+          sourceIndex >= 0 &&
+          (kind === 'rego' ? parentKey === 'source' : libsParent === 'source')
+        ) {
           const source = stack[sourceIndex];
           group(source, versionOf(source)).modules.push({ kind, ...e.block });
         } else if (inTargets && sourceIndex < 0) {
           // Legacy fields: spec.targets[].rego and spec.targets[].libs. The owner is the target item.
           const owner = target ?? stack[stack.length - 1];
-          group(owner, 'v0').modules.push({ kind, text: e.block.text, firstLine: e.block.firstLine, indent: e.block.indent });
+          group(owner, 'v0').modules.push({
+            kind,
+            text: e.block.text,
+            firstLine: e.block.firstLine,
+            indent: e.block.indent,
+          });
         }
       }
       stack.push(e);

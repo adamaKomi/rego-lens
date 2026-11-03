@@ -52,7 +52,10 @@ suite('Extension manifest (package.json)', () => {
     assert.strictEqual(raw.browser, './out/web.js');
     // The web entry runs as a single file in the browser: it must not import anything.
     const web = fs.readFileSync(path.join(ROOT, 'src', 'web.ts'), 'utf8');
-    assert.ok(!/^\s*import\s/m.test(web) && !/require\(/.test(web), 'src/web.ts must not import modules');
+    assert.ok(
+      !/^\s*import\s/m.test(web) && !/require\(/.test(web),
+      'src/web.ts must not import modules'
+    );
   });
 
   test('every contributed command is registered by the extension', () => {
@@ -60,7 +63,10 @@ suite('Extension manifest (package.json)', () => {
     const commands = (pkg.contributes.commands ?? []) as Array<{ command: string }>;
     assert.ok(commands.length > 0);
     for (const { command } of commands) {
-      assert.ok(source.includes(`'${command}'`), `${command} is not registered in src/extension.ts`);
+      assert.ok(
+        source.includes(`'${command}'`),
+        `${command} is not registered in src/extension.ts`
+      );
     }
   });
 
@@ -71,8 +77,11 @@ suite('Extension manifest (package.json)', () => {
       untrustedWorkspaces: { supported: string; restrictedConfigurations: string[] };
     };
     assert.strictEqual(caps.untrustedWorkspaces.supported, 'limited');
-    assert.deepStrictEqual(caps.untrustedWorkspaces.restrictedConfigurations, ['regoSyntaxSupport.opa.path']);
-    const properties = (pkg.contributes.configuration as { properties: Record<string, unknown> }).properties;
+    assert.deepStrictEqual(caps.untrustedWorkspaces.restrictedConfigurations, [
+      'regoSyntaxSupport.opa.path',
+    ]);
+    const properties = (pkg.contributes.configuration as { properties: Record<string, unknown> })
+      .properties;
     assert.ok('regoSyntaxSupport.opa.path' in properties);
   });
 
@@ -107,7 +116,14 @@ suite('Extension manifest (package.json)', () => {
 
   test('.vscodeignore keeps sources and tests out of the published package', () => {
     const ignore = fs.readFileSync(path.join(ROOT, '.vscodeignore'), 'utf8').split(/\r?\n/);
-    for (const entry of ['src/**', 'test/**', 'scripts/**', 'out/test/**', 'out/**/*.map', 'out/**/*.d.ts']) {
+    for (const entry of [
+      'src/**',
+      'test/**',
+      'scripts/**',
+      'out/test/**',
+      'out/**/*.map',
+      'out/**/*.d.ts',
+    ]) {
       assert.ok(ignore.includes(entry), `${entry} missing from .vscodeignore`);
     }
     // The compiled extension itself is published.

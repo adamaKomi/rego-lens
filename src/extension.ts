@@ -79,7 +79,9 @@ class EmbeddedRegoChecker {
 
   /** Checks a document and returns the number of errors. `explicit` is a request from the command. */
   async check(document: vscode.TextDocument, explicit = false): Promise<number> {
-    const enabled = vscode.workspace.getConfiguration(SECTION).get<boolean>('embeddedRego.check', true);
+    const enabled = vscode.workspace
+      .getConfiguration(SECTION)
+      .get<boolean>('embeddedRego.check', true);
     if (document.languageId !== 'yaml' || (!enabled && !explicit) || !vscode.workspace.isTrusted) {
       return 0;
     }
@@ -115,7 +117,9 @@ class EmbeddedRegoChecker {
       try {
         findings.push(...(await checkGroup(group, opa)));
       } catch (err) {
-        void vscode.window.showWarningMessage(`Rego Syntax Support: opa check failed: ${String(err)}`);
+        void vscode.window.showWarningMessage(
+          `Rego Syntax Support: opa check failed: ${String(err)}`
+        );
         return 0;
       }
     }
@@ -124,7 +128,12 @@ class EmbeddedRegoChecker {
       findings.map((f) => {
         const line = document.lineAt(Math.min(f.line, document.lineCount - 1));
         const start = Math.min(f.column, line.range.end.character);
-        const range = new vscode.Range(line.lineNumber, start, line.lineNumber, line.range.end.character);
+        const range = new vscode.Range(
+          line.lineNumber,
+          start,
+          line.lineNumber,
+          line.range.end.character
+        );
         const diagnostic = new vscode.Diagnostic(range, f.message, vscode.DiagnosticSeverity.Error);
         diagnostic.source = 'opa check';
         diagnostic.code = f.code;
@@ -140,7 +149,9 @@ class EmbeddedRegoChecker {
    */
   private async opa(explicit: boolean): Promise<{ path: string; major: number } | undefined> {
     const own = vscode.workspace.getConfiguration(SECTION).get<string>('opa.path', '').trim();
-    const official = vscode.workspace.getConfiguration('opa').get<string | null>('dependency_paths.opa', null);
+    const official = vscode.workspace
+      .getConfiguration('opa')
+      .get<string | null>('dependency_paths.opa', null);
     const path = own || official?.trim() || 'opa';
     if (!this.versions.has(path)) {
       const major = await runProcess(path, ['version'], 10000).then(
@@ -161,7 +172,10 @@ class EmbeddedRegoChecker {
           "Don't Show Again"
         );
         if (choice === 'Open Settings') {
-          void vscode.commands.executeCommand('workbench.action.openSettings', `${SECTION}.opa.path`);
+          void vscode.commands.executeCommand(
+            'workbench.action.openSettings',
+            `${SECTION}.opa.path`
+          );
         } else if (choice === "Don't Show Again") {
           await this.state.update(MISSING_DISMISSED, true);
         }

@@ -1,5 +1,11 @@
 import * as assert from 'assert';
-import { checkGroup, parseOpaVersion, Runner, runProcess, versionFlags } from '../../embedded/check';
+import {
+  checkGroup,
+  parseOpaVersion,
+  Runner,
+  runProcess,
+  versionFlags,
+} from '../../embedded/check';
 import { EmbeddedGroup, extractConstraintTemplates } from '../../embedded/extract';
 
 function yaml(...lines: string[]): string {
@@ -39,7 +45,10 @@ suite('Rego embedded in Gatekeeper ConstraintTemplates', () => {
         ['lib', 15, 10, 'package lib.more'],
       ]
     );
-    assert.strictEqual(g.modules[0].text, 'package k8srequiredlabels\n\nviolation[{"msg": msg}] {\n  msg := "x"\n}\n');
+    assert.strictEqual(
+      g.modules[0].text,
+      'package k8srequiredlabels\n\nviolation[{"msg": msg}] {\n  msg := "x"\n}\n'
+    );
   });
 
   test('code[] with engine Rego: source.version v1 is honored, and missing means v0', () => {
@@ -150,7 +159,9 @@ suite('Rego embedded in Gatekeeper ConstraintTemplates', () => {
   test('no template, no Rego: nothing', () => {
     assert.deepStrictEqual(extractConstraintTemplates('kind: Deployment\nspec: {}\n'), []);
     assert.deepStrictEqual(
-      extractConstraintTemplates(yaml('kind: ConstraintTemplate', 'spec:', '  targets:', '    - target: t', '      rego: |')),
+      extractConstraintTemplates(
+        yaml('kind: ConstraintTemplate', 'spec:', '  targets:', '    - target: t', '      rego: |')
+      ),
       []
     );
   });
@@ -160,7 +171,12 @@ suite('Checking embedded Rego with opa check', () => {
   const group: EmbeddedGroup = {
     version: 'v0',
     modules: [
-      { kind: 'rego', text: 'package p\n\nviolation[{"msg": msg}] {\n  msg := y\n}\n', firstLine: 10, indent: 8 },
+      {
+        kind: 'rego',
+        text: 'package p\n\nviolation[{"msg": msg}] {\n  msg := y\n}\n',
+        firstLine: 10,
+        indent: 8,
+      },
       { kind: 'lib', text: 'package lib.x\n', firstLine: 20, indent: 10 },
     ],
   };
@@ -182,8 +198,16 @@ suite('Checking embedded Rego with opa check', () => {
       const files = args.filter((a) => a.endsWith('.rego'));
       const stderr = JSON.stringify({
         errors: [
-          { code: 'rego_unsafe_var_error', message: 'var y is unsafe', location: { file: files[0], row: 4, col: 10 } },
-          { code: 'rego_parse_error', message: 'unexpected eof token', location: { file: files[1], row: 2, col: 0 } },
+          {
+            code: 'rego_unsafe_var_error',
+            message: 'var y is unsafe',
+            location: { file: files[0], row: 4, col: 10 },
+          },
+          {
+            code: 'rego_parse_error',
+            message: 'unexpected eof token',
+            location: { file: files[1], row: 2, col: 0 },
+          },
           { code: 'rego_compile_error', message: 'error limit reached' },
         ],
       });

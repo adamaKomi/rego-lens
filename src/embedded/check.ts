@@ -31,14 +31,19 @@ export type Runner = (
 /** The default runner: execFile, without a shell. */
 export const runProcess: Runner = (file, args, timeoutMs) =>
   new Promise((resolve, reject) => {
-    execFile(file, args, { timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 }, (err, stdout, stderr) => {
-      if (err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
-        reject(new Error(`${file} not found`, { cause: err }));
-        return;
+    execFile(
+      file,
+      args,
+      { timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 },
+      (err, stdout, stderr) => {
+        if (err && (err as NodeJS.ErrnoException).code === 'ENOENT') {
+          reject(new Error(`${file} not found`, { cause: err }));
+          return;
+        }
+        const code = err ? (typeof err.code === 'number' ? err.code : 1) : 0;
+        resolve({ stdout: String(stdout), stderr: String(stderr), code });
       }
-      const code = err ? (typeof err.code === 'number' ? err.code : 1) : 0;
-      resolve({ stdout: String(stdout), stderr: String(stderr), code });
-    });
+    );
   });
 
 /** Reads the major version from `opa version` ("Version: 1.21.3"). */
@@ -74,7 +79,9 @@ export function mapErrors(output: string, group: EmbeddedGroup, files: string[])
   }
   const findings: Finding[] = [];
   for (const e of parsed.errors ?? []) {
-    const index = e.location?.file ? files.findIndex((f) => path.resolve(f) === path.resolve(e.location!.file!)) : -1;
+    const index = e.location?.file
+      ? files.findIndex((f) => path.resolve(f) === path.resolve(e.location!.file!))
+      : -1;
     // An error without a known location ("error limit reached") goes to the first module.
     const module = group.modules[index >= 0 ? index : 0];
     const row = index >= 0 && e.location?.row ? e.location.row : 1;

@@ -46,7 +46,9 @@ suite('Extension', () => {
 
 suite('Rego in Gatekeeper templates', () => {
   test('opening a template activates the extension and registers the check command', async () => {
-    const doc = await vscode.workspace.openTextDocument(path.join(FIXTURES, 'constraint-template.yaml'));
+    const doc = await vscode.workspace.openTextDocument(
+      path.join(FIXTURES, 'constraint-template.yaml')
+    );
     await vscode.window.showTextDocument(doc);
     const ext = vscode.extensions.getExtension(`${pkg.publisher}.${pkg.name}`);
     assert.ok(ext);
