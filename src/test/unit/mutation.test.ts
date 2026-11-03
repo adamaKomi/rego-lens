@@ -111,7 +111,7 @@ suite('regodrill report', () => {
     });
   });
 
-  // The contract with the real binary, when there is one: regodrill is not published yet, so CI skips it.
+  // The contract with the real binary, when there is one on the PATH (CI has none, so it skips this test).
   test('with the real regodrill binary', function (done) {
     this.timeout(60000);
     const dir = path.join(ROOT, 'test', 'mutation');

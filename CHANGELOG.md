@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-03
+
 ### Added
 - Errors in the Rego of OPA Gatekeeper `ConstraintTemplate` files, shown on the YAML lines. The Rego of each
   target (`rego` and `libs`, or `code[].source`) is checked with `opa check`, as Rego v0 or v1 like
@@ -15,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the official OPA extension's path, then to `opa` on the `PATH`). Off in Restricted Mode and in vscode.dev.
 - Mutation testing with regodrill: the command **Rego: Run Mutation Testing** shows the mutants that survive
   the tests as diagnostics, with a hover, an **Ignore this mutant** quick fix, a CodeLens per rule definition
-  (`allow: 3/5 mutants killed`, with regodrill after 0.1.0) and the score in the status bar.
+  (`allow: 3/5 mutants killed`, with regodrill 0.2.0 or later) and the score in the status bar.
   Settings: `regoSyntaxSupport.regodrill.path`, `regoSyntaxSupport.regodrill.args`,
   `regoSyntaxSupport.regodrill.runOnSave`. Needs the regodrill binary, from the
   [regodrill releases](https://github.com/adamaKomi/regodrill/releases) or `go install`.
