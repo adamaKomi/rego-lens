@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Rego Syntax Support icon. Curly braces (Rego code) around a check mark (policies that pass their
+       tests). Paths only, no text, so it renders the same everywhere. `npm run build:icon` writes icon.png. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22357A"/>
+      <stop offset="1" stop-color="#0B1433"/>
+    </linearGradient>
+    <linearGradient id="braces" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7DD3FC"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="check" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#86EFAC"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+  <g fill="none" stroke="url(#braces)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 94 50 C 70 50 64 62 64 84 L 64 106 C 64 120 56 128 42 128 C 56 128 64 136 64 150 L 64 172 C 64 194 70 206 94 206"/>
+    <path d="M 162 50 C 186 50 192 62 192 84 L 192 106 C 192 120 200 128 214 128 C 200 128 192 136 192 150 L 192 172 C 192 194 186 206 162 206"/>
+  </g>
+  <path d="M 98 130 L 120 152 L 160 104" fill="none" stroke="url(#check)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

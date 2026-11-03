@@ -37,7 +37,7 @@
   "homepage": "https://github.com/adamaKomi/rego-syntax-support#readme",
   "icon": "resources/icon.png",
   "galleryBanner": {
-    "color": "#1e1e1e",
+    "color": "#111C45",
     "theme": "dark"
   },
   "contributes": {
@@ -118,6 +118,7 @@
     "clean": "rimraf out",
     "prepare": "npm run compile",
     "build:grammars": "node scripts/build-grammars.js",
+    "build:icon": "node scripts/build-icon.mjs",
     "check:grammars": "node scripts/build-grammars.js --check",
     "update:builtins": "node scripts/update-builtins.js",
     "test:grammar:rego": "vscode-tmgrammar-test -c \"test/grammar/*.test.rego\"",
