@@ -1,6 +1,6 @@
 # Mutation testing for Rego: specification
 
-Status: draft, v0.2 (2026-11-02). Engine: `regodrill`. Editor integration: the Rego Lens extension (this repository).
+Status: draft, v0.3 (2026-11-02). Engine: `regodrill`. Editor integration: the Rego Syntax Support extension (this repository).
 
 ## 1. Goal
 
@@ -33,8 +33,8 @@ The result is a **mutation score** and a list of surviving mutants with their ex
 | Mutant | A copy of the policy with exactly one mutation applied |
 | Operator | A rule that produces mutants, for example `COMP_BOUNDARY` (`>=` to `>`) |
 | Killed | At least one test fails, errors or times out on the mutant |
-| Survived | All selected tests pass on the mutant |
-| No coverage | No test evaluates the mutated location, so the mutant cannot be killed |
+| Survived | All tests pass on the mutant, and at least one of them evaluates the mutated location |
+| No coverage | All tests pass on the mutant, and none of them evaluates the mutated location |
 | Stillborn | The mutant does not compile (type error, unsafe variable). Discarded, not counted |
 | Equivalent | The mutant behaves exactly like the original for every input. Cannot be killed; must be ignored |
 | Ignored | Excluded by an inline annotation or the config file |
@@ -65,7 +65,7 @@ regodrill operators                  print the operators with a description and 
 regodrill version
 ```
 
-`paths` are files or directories, loaded like `opa test` does (`.rego` files, `data.json`/`data.yaml`, bundles). Test files are the files that define `test_` rules. They are never mutated.
+`paths` are files or directories, loaded like `opa test` does (`.rego` files, `data.json`/`data.yaml`, bundles). Test files are the files whose name ends with `_test.rego` or that define `test_` rules. They are never mutated, and neither are the fixtures and helpers they contain.
 
 | Flag | Default | Effect |
 |---|---|---|
@@ -86,7 +86,7 @@ regodrill version
 |---|---|
 | 0 | Run completed, threshold met or not set |
 | 1 | Usage or configuration error |
-| 2 | Baseline failed: the unmodified tests do not all pass, or do not compile. Nothing is mutated |
+| 2 | Baseline failed: a file does not parse or load, the unmodified tests do not all pass or do not compile, or there is no test to run. Nothing is mutated. A Rego v0 project loaded without `--v0-compatible` gets a hint |
 | 3 | Run completed, score below `--threshold` |
 
 ### Text report (example)
@@ -137,14 +137,20 @@ Off by default, available with `--operators`:
 ## 6. Execution
 
 1. **Load** the paths and split policy files from test files.
-2. **Baseline**: compile and run all tests once, with coverage enabled (`opa/v1/cover`). If a test fails or errors, stop with exit code 2. The coverage gives, for each policy line, the set of tests that evaluate it.
-3. **Generate** the mutants (§5) for policy files, filtered by `--since`, operators and ignores.
-4. **Classify without running**: a mutant on a line that no test covers is `no_coverage`.
-5. **Run**: for each other mutant, run only the tests that cover its line, in parallel workers. Stop at the first failing test (one is enough to kill).
-   - Test fails or errors: `killed`, with the killing test's name.
-   - All pass: `survived`.
+2. **Baseline**: compile and run all tests once, with a query tracer. If a file does not load, a test fails or errors, or there is no test, stop with exit code 2. For each test, the tracer records:
+   - the lines it evaluates (line coverage, for the `survived` / `no_coverage` distinction and the reports);
+   - the documents it looks up (the `Index` trace event), which decide test selection.
+
+   One run is enough: the test runner evaluates tests one at a time, and each test's query starts with the lookup of the test rule, so the tracer knows which test it is in. `opa/v1/cover` is not used: it adds two extra passes per test.
+3. **Generate** the mutants (§5) for policy files, filtered by `--since`, operators and ignores. Each mutant knows its enclosing rule (package path and ground prefix of the head, for example `data.app.authz.allow`).
+4. **Select** the tests that **reach** the enclosing rule: they look up the rule, a document that contains it (`data.app.authz`, `data.app.authz.checks[name]`), or a document inside it. Only these tests can see a change to the rule. A mutant that no test reaches is compiled (to detect a stillborn mutant) and classified `no_coverage` without running.
+5. **Run** the selected tests on each other mutant, in parallel workers.
+   - A test fails or errors: `killed`. `killedBy` is the first failing test **by name**, so reports are deterministic (the runner's order is not). An implementation may stop early only if it keeps this property.
+   - All pass, and a test evaluates the mutated line: `survived`. All pass, and none does: `no_coverage`.
    - Duration > `--timeout-factor` × baseline duration of those tests: `timeout`, which counts as killed.
 6. **Report**.
+
+**Selection never changes a verdict.** `--no-select` runs every test on every mutant and must give the same statuses and `killedBy`. Selection by covered line, the first design, is unsound: for an input that does not match an indexed expression (`input.kind == "Service"`), OPA's rule index skips the whole body, so the line is not covered, yet removing that expression makes the test fail. The spike measured 14 such mutants out of 1,300 (1.1 %) in gatekeeper-library.
 
 ### Score
 
@@ -224,6 +230,7 @@ Described in §4. Colors when stdout is a terminal; `NO_COLOR` is respected.
       "status": "survived",
       "rule": "data.app.authz.allow",
       "coveringTests": ["data.app.authz_test.test_adult_allowed"],
+      "selectedTests": ["data.app.authz_test.test_adult_allowed", "data.app.authz_test.test_minor_denied"],
       "killedBy": null,
       "message": "Changing >= to > does not make any test fail."
     }
@@ -232,6 +239,8 @@ Described in §4. Colors when stdout is a terminal; `NO_COLOR` is respected.
 ```
 
 - Lines and columns are 1-based. `end` is exclusive.
+- Test names are the names the OPA test runner filters on: `data.pkg.test_x`, or `data.pkg["test_x#01"]` for a duplicate name that the runner renamed.
+- `coveringTests` evaluate the mutated line; `selectedTests` reach the enclosing rule and were run.
 - `id` is stable across runs on the same source, so editors can match results with the document.
 - Adding fields does not change `schemaVersion`. Removing or renaming a field does.
 
@@ -250,7 +259,7 @@ The output is accepted by `github/codeql-action/upload-sarif`: survivors appear 
 - **Resources**: each mutant evaluation has the timeout above and the same memory limits as `opa test`. A runaway mutant (for example an infinite recursion it introduces) counts as killed by timeout and never blocks the run.
 - No file is written next to the policies; mutants exist only in memory.
 
-## 11. VS Code integration (Rego Lens, this extension)
+## 11. VS Code integration (Rego Syntax Support, this extension)
 
 The extension stays useful without the binary: syntax highlighting and snippets don't depend on it.
 
@@ -306,24 +315,28 @@ The spike ends with a short report: the measures above and a list of real surviv
 
 If a go criterion fails, we decide before continuing: change the approach, or stop.
 
+Results: [`docs/spike-m0.md`](https://github.com/adamaKomi/regodrill/blob/main/docs/spike-m0.md) in the regodrill repository.
+
 ## 15. Milestones
 
 | Milestone | Content | Done when |
 |---|---|---|
 | M0 Spike | §14 | Report written, go or no-go |
-| M1 CLI MVP | All default operators, coverage selection, ignores, config file, JSON v1, SARIF, threshold, `--since`, network off | Runs on gatekeeper-library and on this repo's `test/fixtures`; Go tests for each operator (one killed and one surviving example) |
+| M1 CLI MVP | All default operators, test selection, ignores, config file, JSON v1, SARIF, threshold, `--since`, network off | Runs on gatekeeper-library and on this repo's `test/fixtures`; each operator and each behavior has a scenario in regodrill's catalog (`testdata/scenarios`), with at least one killed and one surviving example per operator |
 | M2 Release | goreleaser binaries, `go install`, README with a real example | v0.1.0 tagged |
 | M3 VS Code | §11 | Integration test: open a policy with an incomplete test, run the command, a diagnostic appears at the right line |
 | M4 Action | §12 | Used on a sample repository, alerts visible on a PR |
-| M5 Positioning | Present Rego Lens as the test-quality companion of the official OPA extension; list `regodrill` on the OPA ecosystem page | README and Marketplace page updated, ecosystem PR opened |
+| M5 Positioning | Present Rego Syntax Support as the test-quality companion of the official OPA extension; list `regodrill` on the OPA ecosystem page | README and Marketplace page updated, ecosystem PR opened |
 
 ## 16. Decisions
 
-1. **Names**: the engine, its CLI and its repository are `regodrill`. The name comes from a fire drill: mistakes are set off on purpose to check that the tests react. The editor integration is this extension, displayed as **Rego Lens** (its identifier `AdamaKomi.rego-syntax-support` does not change, so existing installations keep updating). Neither name contains "OPA", so they can't be mistaken for an official OPA project.
+1. **Names**: the engine, its CLI and its repository are `regodrill`. The name comes from a fire drill: mistakes are set off on purpose to check that the tests react. The editor integration is this extension, **Rego Syntax Support** (`AdamaKomi.rego-syntax-support`). A rename to "Rego Lens" was considered and dropped on 2026-11-02: users already installed and trust the current name. Neither name contains "OPA", so they can't be mistaken for an official OPA project; "Open Policy Agent (OPA)" appears in the description and keywords only.
 2. **OPA version**: the engine embeds the latest OPA v1 Go library, so it understands all current syntax (including `and`/`or`) whatever `opa` binary the user has installed. Policies are parsed as Rego v1 by default; `--v0-compatible` parses Rego v0.
 3. **Rego embedded in YAML** (Gatekeeper `ConstraintTemplate`): postponed until after M4. Its tests usually live in gator suites, not in `.rego` test files, so it needs its own design.
 4. **Higher-order or prioritized mutation** (several mutations at once, ranking by rule criticality): out of the MVP, to be revisited after M1 with real data.
 5. **License**: Apache 2.0 for the `regodrill` repository, like OPA, Regal and Gatekeeper (explicit patent grant). This extension stays MIT.
+6. **Test selection by rule reach** (2026-11-02), not by covered line: see §6. It is sound on the spike corpus, but only 1.27× faster there, because compiling each mutant costs more than running small test suites.
+7. **Scenario catalog as the acceptance test** (2026-11-02): regodrill's `testdata/scenarios` runs the CLI end to end on small projects, with and without selection, against expected verdicts justified in the fixtures. Every behavior change comes with a scenario.
 
 ## References
 
