@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Icon of .rego files in the Explorer and tabs: the extension icon (resources/icon.svg) redrawn for 16 px,
+       with larger strokes and flat colors. It has its own background, so one file serves light and dark
+       themes. -->
+  <rect width="32" height="32" rx="7" fill="#22357A"/>
+  <g fill="none" stroke="#7DD3FC" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 10.8 4.6 C 7.8 4.6 7.2 6.2 7.2 9 L 7.2 12.6 C 7.2 14.6 6.3 16 4.2 16 C 6.3 16 7.2 17.4 7.2 19.4 L 7.2 23 C 7.2 25.8 7.8 27.4 10.8 27.4"/>
+    <path d="M 21.2 4.6 C 24.2 4.6 24.8 6.2 24.8 9 L 24.8 12.6 C 24.8 14.6 25.7 16 27.8 16 C 25.7 16 24.8 17.4 24.8 19.4 L 24.8 23 C 24.8 25.8 24.2 27.4 21.2 27.4"/>
+  </g>
+  <path d="M 11.2 16.6 L 14.6 20 L 20.8 12.4" fill="none" stroke="#4ADE80" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
