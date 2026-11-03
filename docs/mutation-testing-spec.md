@@ -1,6 +1,6 @@
 # Mutation testing for Rego: specification
 
-Status: draft, v0.3 (2026-11-02). Engine: `regodrill`. Editor integration: the Rego Syntax Support extension (this repository).
+Status: draft, v0.4 (2026-11-03). Engine: `regodrill`. Editor integration: the Rego Syntax Support extension (this repository).
 
 ## 1. Goal
 
@@ -76,9 +76,14 @@ regodrill version
 | `--operators A,B` / `--exclude-operators A,B` | all default-on | Select operators |
 | `--parallel N` | number of CPUs | Mutants evaluated in parallel |
 | `--timeout-factor F` | `5` | A mutant times out when its tests take more than F × baseline duration (minimum 2 s) |
-| `--allow-network` | off | Keep `http.send` and `net.*` built-ins (§10) |
+| `--allow-network` | off | Keep `http.send` and `net.lookup_ip_addr` (§10) |
 | `--config FILE` | `.regodrill.yaml` if present | Configuration file (§7.2) |
+| `--ignore PATTERN` | none | Skip files and directories whose name matches, when loading (same as `opa test --ignore`, repeatable) |
 | `--v0-compatible` | off | Parse as Rego v0 (same meaning as in `opa`) |
+| `--no-select` | off | Run every test on every mutant (§6); same verdicts, slower |
+
+On a terminal the text report is colored (`NO_COLOR` turns it off) and stderr shows progress. An unknown
+operator ID, format or configuration key is a usage error.
 
 ### Exit codes
 
@@ -119,6 +124,20 @@ Each operator has a stable ID, used in reports, annotations and configuration. A
 | `QUANT_WEAKEN` | `every x in xs { body }` → `some x in xs` followed by `body` inlined in the enclosing rule | `every c in containers { c.privileged == false }` → `some c in containers; c.privileged == false` | "All" checked as "at least one": one compliant item lets the others through |
 | `LOGIC_SWAP` | `and` ↔ `or` (Rego v1 keywords, OPA ≥ 1.22) | `a and b` → `a or b` | Condition relaxed or tightened |
 
+Scope of each operator, as implemented in M1 (regodrill's scenario catalog has one directory per operator):
+
+- `CONST_STRING` changes a string compared with `==`/`!=`, or on the left of `in`. Elements of a literal
+  collection are `COLLECTION_DROP`'s. Raw strings are handled.
+- `CONST_NUMBER` changes integers in comparisons only (decimals and call arguments are left alone).
+- `COLLECTION_DROP` applies to literal sets and arrays of at least two constants (`[x.name, x.image]` is not
+  a list of roles).
+- `NOT_TOGGLE` does not add `not` to a declaration, a unification, `every`, `some`, or an expression whose
+  variables nothing else binds (a negation binds nothing).
+- `RULE_REMOVE` counts definitions across all policy files, ignores `default` definitions, and handles
+  Rego v0 chained bodies (`f(x) = y { a } { b }`) and body-less definitions (`f("x", _)`).
+- `print` and `trace` calls are never mutated: they are always true and do not affect the decision.
+- `LOGIC_SWAP` waits for an OPA release with `and`/`or` that is at least two weeks old.
+
 Off by default, available with `--operators`:
 
 | ID | Mutation | Why off by default |
@@ -130,8 +149,8 @@ Off by default, available with `--operators`:
 
 1. Mutants are produced from the parsed AST (types and locations from `opa/v1/ast`). They are applied as **text patches on the original source**, at the token's `Location`. The source keeps its comments and formatting, so the diff shown to the user is exactly one change.
 2. One mutation per mutant (first order only).
-3. Each mutant is compiled with the same compiler options as the baseline. Compile errors make it **stillborn**: it is reported in JSON with the error, and excluded from the score.
-4. **Trivial compiler equivalence**: after compilation, each mutant's module is hashed (formatted AST). A mutant whose hash equals the original, or another mutant's, is dropped as equivalent or duplicate. This is free and removes a share of the equivalent mutants.
+3. Each mutant is compiled with the same compiler options as the baseline. Compile errors make it **stillborn**: it is reported in JSON with the error, and excluded from the score. Mutants that a static check can show would not compile are **not generated**: removing an expression that binds a variable the rule still needs (`x := ...`, `some x in`, `x = ...`, `items[x]`) when nothing else can bind it, or adding `not` to such an expression. The check is conservative: on gatekeeper-library and trivy-checks it dropped only mutants that were stillborn (45 % stillborn in the spike, 1.9 % after).
+4. **Trivial compiler equivalence**: a mutant whose parsed module equals the original (OPA's AST comparison, which ignores locations and compares sets as sets) is `equivalent`: not run, not scored. Duplicates between mutants were measured: none among the 2,426 mutants of gatekeeper-library.
 5. Order is deterministic: file path, then line, column and operator ID.
 
 ## 6. Execution
@@ -149,6 +168,10 @@ Off by default, available with `--operators`:
    - All pass, and a test evaluates the mutated line: `survived`. All pass, and none does: `no_coverage`.
    - Duration > `--timeout-factor` × baseline duration of those tests: `timeout`, which counts as killed.
 6. **Report**.
+
+**Running the tests of a mutant.** OPA's test runner attaches a query tracer to every test, which cost about a third of the CPU time. For plain test rules, regodrill compiles the modules like the runner (same capabilities, same renaming of duplicate test names, in module path order so names are stable) and evaluates each test query without a tracer: an error, an empty result or a value other than `true` fails. Tests run in name order and stop at the first failure, which is the reported `killedBy`. A project with a parameterized test (`test_x[name] if ...`) uses the runner, whose verdict depends on sub-results. On gatekeeper-library this took the mutation phase from 55 s to 8.8 s with identical verdicts. When one test name is defined in two files of a package, test selection is turned off: the runner's renaming order is not stable, so a name may not designate the same test in two compilations.
+
+**The baseline always runs**, even when there is no mutant to run: a broken test suite must never look like a success. It runs twice to detect unstable tests (§10).
 
 **Selection never changes a verdict.** `--no-select` runs every test on every mutant and must give the same statuses and `killedBy`. Selection by covered line, the first design, is unsound: for an input that does not match an indexed expression (`input.kind == "Service"`), OPA's rule index skips the whole body, so the line is not covered, yet removing that expression makes the test fail. The spike measured 14 such mutants out of 1,300 (1.1 %) in gatekeeper-library.
 
@@ -182,18 +205,25 @@ allow if {
 ```yaml
 version: 1
 paths: [policies]
-exclude: ["policies/vendor/**"]
+exclude: ["policies/vendor/**"]     # loaded and tested, never mutated
 threshold: 80
 operators:
-  exclude: [CONST_STRING]
+  exclude: [CONST_STRING]           # or include: [...]
 ignore:
   - file: policies/authz.rego
     line: 14
     operator: COMP_BOUNDARY
     reason: "age is always an integer, > 17 is tested"
+  - pattern: 'input\.review\.kind\.kind =='   # every line whose text matches
+    reason: "Gatekeeper's match filters the kind"
+ignore-files: ["*.yaml"]            # like --ignore
+v0-compatible: false
+parallel: 4
+timeout-factor: 5
+allow-network: false
 ```
 
-Command-line flags take precedence over the file.
+Command-line flags take precedence over the file. Paths are relative to the file. Unknown keys are errors, so a typo never silently disables a setting. An ignore entry that matches no mutant is a warning, like a stale annotation. Ignores apply before `--since`, so an entry on an unchanged line is not reported as stale.
 
 ## 8. Incremental mode (`--since`)
 
@@ -238,7 +268,8 @@ Described in §4. Colors when stdout is a terminal; `NO_COLOR` is respected.
 }
 ```
 
-- Lines and columns are 1-based. `end` is exclusive.
+- Lines and columns are 1-based. `end` is exclusive. Columns count UTF-16 code units, like editors and SARIF; they equal byte columns on ASCII lines.
+- The normative description of every field is regodrill's [`docs/report-format.md`](https://github.com/adamaKomi/regodrill/blob/main/docs/report-format.md), checked by a contract test. It adds to the example above: `tool`, `warnings`, the `ignored` and `equivalent` statuses, `ignoreReason`, `selectedTests`, `range`, and per-operator counts in camelCase.
 - Test names are the names the OPA test runner filters on: `data.pkg.test_x`, or `data.pkg["test_x#01"]` for a duplicate name that the runner renamed.
 - `coveringTests` evaluate the mutated line; `selectedTests` reach the enclosing rule and were run.
 - `id` is stable across runs on the same source, so editors can match results with the document.
@@ -255,6 +286,7 @@ The output is accepted by `github/codeql-action/upload-sarif`: survivors appear 
 ## 10. Safety and determinism
 
 - **Network off by default**: mutants can turn a test path into one that calls `http.send` or `net.lookup_ip_addr`. These built-ins are removed from the compiler capabilities unless `--allow-network` is set. A policy that needs them fails at baseline, with a message pointing to the flag.
+- **Custom built-ins**: projects that run their tests with a custom OPA build (aquasecurity/trivy-checks, conftest's `parse_config`) call functions that standard OPA does not have. The baseline fails with a hint that names them. Supporting them would need a way to provide their implementations; not planned for M1.
 - **Time and randomness**: built-ins like `time.now_ns`, `rand.intn` and `uuid.rfc4122` can make tests flaky. The baseline runs twice; if results differ, regodrill stops with exit code 2 and names the unstable tests.
 - **Resources**: each mutant evaluation has the timeout above and the same memory limits as `opa test`. A runaway mutant (for example an infinite recursion it introduces) counts as killed by timeout and never blocks the run.
 - No file is written next to the policies; mutants exist only in memory.
@@ -322,7 +354,7 @@ Results: [`docs/spike-m0.md`](https://github.com/adamaKomi/regodrill/blob/main/d
 | Milestone | Content | Done when |
 |---|---|---|
 | M0 Spike | §14 | Report written, go or no-go |
-| M1 CLI MVP | All default operators, test selection, ignores, config file, JSON v1, SARIF, threshold, `--since`, network off | Runs on gatekeeper-library and on this repo's `test/fixtures`; each operator and each behavior has a scenario in regodrill's catalog (`testdata/scenarios`), with at least one killed and one surviving example per operator |
+| M1 CLI MVP | All default operators, test selection, ignores, config file, JSON v1, SARIF, threshold, `--since`, network off | Runs on gatekeeper-library and other public corpora (regodrill's `docs/corpora.md`; this repo's `test/fixtures` are highlighting samples, without tests and with deliberate type errors, so they are not a target); each operator and each behavior has a scenario in regodrill's catalog (`testdata/scenarios`), with at least one killed and one surviving example per operator. Status (2026-11-03): done except `LOGIC_SWAP`, on a local branch of regodrill; 2,426 mutants on gatekeeper-library in 13.5 s |
 | M2 Release | goreleaser binaries, `go install`, README with a real example | v0.1.0 tagged |
 | M3 VS Code | §11 | Integration test: open a policy with an incomplete test, run the command, a diagnostic appears at the right line |
 | M4 Action | §12 | Used on a sample repository, alerts visible on a PR |
@@ -337,6 +369,8 @@ Results: [`docs/spike-m0.md`](https://github.com/adamaKomi/regodrill/blob/main/d
 5. **License**: Apache 2.0 for the `regodrill` repository, like OPA, Regal and Gatekeeper (explicit patent grant). This extension stays MIT.
 6. **Test selection by rule reach** (2026-11-02), not by covered line: see §6. It is sound on the spike corpus, but only 1.27× faster there, because compiling each mutant costs more than running small test suites.
 7. **Scenario catalog as the acceptance test** (2026-11-02): regodrill's `testdata/scenarios` runs the CLI end to end on small projects, with and without selection, against expected verdicts justified in the fixtures. Every behavior change comes with a scenario.
+8. **Own evaluation of plain tests** (2026-11-03), instead of OPA's test runner, for speed (§6). Parameterized tests keep the runner. Verdicts are compared with the runner's on the corpora at each change.
+9. **No new dependencies without need**: the configuration file uses `go.yaml.in/yaml/v3`, already in OPA's module graph. The JSON report contract is checked with Go structs, not a JSON Schema library.
 
 ## References
 
