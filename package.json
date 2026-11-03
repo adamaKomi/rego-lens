@@ -43,8 +43,7 @@
   "main": "./out/extension.js",
   "browser": "./out/web.js",
   "activationEvents": [
-    "onLanguage:yaml",
-    "onLanguage:rego"
+    "onLanguage:yaml"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
@@ -128,8 +127,8 @@
         ],
         "configuration": "./languages/rego-language-configuration.json",
         "icon": {
-          "light": "./resources/rego-icon-light.svg",
-          "dark": "./resources/rego-icon-dark.svg"
+          "light": "./resources/file-icon.svg",
+          "dark": "./resources/file-icon.svg"
         }
       }
     ],
