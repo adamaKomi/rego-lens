@@ -64,11 +64,11 @@ npm run publish
    ([official guide](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#publish-with-github-actions-and-trusted-publishing)).
    On <https://marketplace.visualstudio.com/manage>, open the publisher, select **Trusted Publishing** > **Create**:
    - Repository owner: `adamaKomi`
-   - Repository: `rego-lens`
+   - Repository: `rego-syntax-support`
    - Workflow: `release.yml`
    - Environment: leave empty
 2. Open VSX: register a **Trusted Publisher** (no secret to store). The namespace `AdamaKomi` must exist.
-   On <https://open-vsx.org>, open the user settings > **Trusted Publishers** and add GitHub, repository `adamaKomi/rego-lens`,
+   On <https://open-vsx.org>, open the user settings > **Trusted Publishers** and add GitHub, repository `adamaKomi/rego-syntax-support`,
    workflow `release.yml`, no environment. An extension can have only one trusted publisher, so after a
    repository rename, delete the old registration first, then create the new one. If the Open VSX job fails,
    it does not block the other jobs.
