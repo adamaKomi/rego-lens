@@ -3,12 +3,16 @@
  * `regodrill run --format json`, and the surviving mutants become diagnostics, with a hover, a quick fix
  * that marks a mutant as checked, and the score in the status bar.
  *
- * regodrill is a separate binary (https://github.com/adamaKomi/regodrill); its path is a setting. Nothing
- * runs until the user starts a run, or turns on runOnSave; nothing runs in Restricted Mode.
+ * regodrill is a separate binary (https://github.com/adamaKomi/regodrill): the setting, the PATH, or a copy
+ * downloaded once the user agrees (tools/regodrill.ts). So that users find the feature, a CodeLens on test
+ * files and a one-time notice offer a first run, until the workspace has had one; the setting
+ * `regoSyntaxSupport.regodrill.suggest` turns both off. Nothing runs until the user starts a run, or turns on
+ * runOnSave; nothing runs in Restricted Mode.
  */
 import { execFile } from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { Regodrill } from '../tools/regodrill';
 import {
   changeSummary,
   ignoreEdit,
@@ -26,6 +30,43 @@ import {
 const SECTION = 'regoSyntaxSupport.regodrill';
 export const RUN_COMMAND = 'regoSyntaxSupport.runMutationTesting';
 const IGNORE_COMMAND = 'regoSyntaxSupport.ignoreMutant';
+/** Workspace state: a run completed in this workspace, so the suggestions stop. */
+const RAN_KEY = 'mutationTestingRan';
+/** Workspace state: the one-time notice was shown in this workspace. */
+const SUGGESTED_KEY = 'mutationTestingSuggested';
+/** The walkthrough in package.json (contributes.walkthroughs). */
+const WALKTHROUGH = 'gettingStarted';
+
+/**
+ * Arguments of the run command, from a CodeLens, a notice or a walkthrough link (`command:` URI with JSON
+ * arguments). `target`: the directory to run on. `download`: the user chose an action that says it downloads
+ * regodrill, so it is not asked again.
+ */
+export interface RunOptions {
+  target?: string;
+  download?: boolean;
+}
+
+function runOptions(value: unknown): RunOptions {
+  if (typeof value !== 'object' || value === null) {
+    return {};
+  }
+  const v = value as Record<string, unknown>;
+  return {
+    target: typeof v.target === 'string' ? v.target : undefined,
+    download: v.download === true,
+  };
+}
+
+/** The line of the `package` declaration, for the CodeLens of a test file. */
+function packageLine(document: vscode.TextDocument): number {
+  for (let i = 0; i < document.lineCount; i++) {
+    if (/^\s*package\s+\S/.test(document.lineAt(i).text)) {
+      return i;
+    }
+  }
+  return 0;
+}
 
 interface RunResult {
   code: number;
@@ -77,14 +118,20 @@ export class MutationTesting
   readonly onDidChangeCodeLenses = this.lensesChanged.event;
   private lastTarget: { cwd: string; target: string } | undefined;
   private running = false;
+  private context: vscode.ExtensionContext | undefined;
+
+  constructor(private readonly regodrill: Regodrill) {}
 
   register(context: vscode.ExtensionContext): void {
+    this.context = context;
     const rego = { language: 'rego' };
     context.subscriptions.push(
       this.diagnostics,
       this.output,
       this.status,
-      vscode.commands.registerCommand(RUN_COMMAND, () => this.runCommand()),
+      vscode.commands.registerCommand(RUN_COMMAND, (options?: unknown) =>
+        this.runCommand(runOptions(options))
+      ),
       vscode.commands.registerCommand(IGNORE_COMMAND, (uri: vscode.Uri, finding: MutantFinding) =>
         this.ignore(uri, finding)
       ),
@@ -95,18 +142,92 @@ export class MutationTesting
         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
       }),
       vscode.workspace.onDidChangeTextDocument((e) => this.dropStale(e)),
-      vscode.workspace.onDidSaveTextDocument((d) => {
+      vscode.workspace.onDidSaveTextDocument(async (d) => {
         const onSave = vscode.workspace.getConfiguration(SECTION).get<boolean>('runOnSave', false);
         if (onSave && d.languageId === 'rego' && vscode.workspace.isTrusted && !this.running) {
           const target = this.lastTarget ?? this.defaultTarget(d.uri);
-          if (target) {
+          // A save never asks to download regodrill: runOnSave only runs a binary that is there.
+          if (target && (await this.regodrill.find())) {
             void this.run(target);
           }
+        }
+      }),
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration(`${SECTION}.suggest`)) {
+          this.lensesChanged.fire();
         }
       })
     );
     this.status.command = RUN_COMMAND;
     this.status.tooltip = 'regodrill mutation score of the last run. Click to run again.';
+    void this.suggest();
+  }
+
+  private suggestionsOn(): boolean {
+    return (
+      vscode.workspace.isTrusted &&
+      vscode.workspace.getConfiguration(SECTION).get<boolean>('suggest', true) &&
+      !this.context?.workspaceState.get<boolean>(RAN_KEY, false)
+    );
+  }
+
+  /**
+   * Once per workspace, when it has Rego tests and regodrill is not installed: a notice that explains mutation
+   * testing and offers a first run on the directory of a test file.
+   */
+  private async suggest(): Promise<void> {
+    const state = this.context?.workspaceState;
+    if (!state || !this.suggestionsOn() || state.get<boolean>(SUGGESTED_KEY, false)) {
+      return;
+    }
+    if (await this.regodrill.find()) {
+      return; // whoever installed regodrill knows it
+    }
+    const [test] = await vscode.workspace.findFiles('**/*_test.rego', '**/node_modules/**', 1);
+    if (!test) {
+      return;
+    }
+    await state.update(SUGGESTED_KEY, true);
+    const dir = path.dirname(test.fsPath);
+    const choice = await vscode.window.showInformationMessage(
+      'Do your Rego tests catch bugs? Mutation testing changes your policies one small step at a time ' +
+        `and shows the changes that no test notices. Try it on ${vscode.workspace.asRelativePath(dir)} ` +
+        `(downloads regodrill, ${this.regodrill.downloadSize()}).`,
+      'Try It',
+      'Learn More',
+      "Don't Show Again"
+    );
+    if (choice === 'Try It') {
+      await this.runCommand({ target: dir, download: true });
+    } else if (choice === 'Learn More') {
+      void vscode.commands.executeCommand(
+        'workbench.action.openWalkthrough',
+        `${this.context?.extension.id}#${WALKTHROUGH}`,
+        false
+      );
+    } else if (choice === "Don't Show Again") {
+      await vscode.workspace
+        .getConfiguration(SECTION)
+        .update('suggest', false, vscode.ConfigurationTarget.Global);
+    }
+  }
+
+  /** A directory with Rego tests: the active Rego file's, else the first test file's in the workspace. */
+  private async suggestedTarget(): Promise<{ cwd: string; target: string } | undefined> {
+    const active = vscode.window.activeTextEditor?.document;
+    let uri: vscode.Uri | undefined;
+    if (active?.languageId === 'rego' && active.uri.scheme === 'file') {
+      uri = active.uri;
+    } else {
+      [uri] = await vscode.workspace.findFiles('**/*_test.rego', '**/node_modules/**', 1);
+    }
+    return uri ? this.targetFor(path.dirname(uri.fsPath)) : undefined;
+  }
+
+  /** Runs on a directory, from the workspace folder that holds it (where .regodrill.yaml is read). */
+  private targetFor(directory: string): { cwd: string; target: string } {
+    const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(directory));
+    return { cwd: folder?.uri.fsPath ?? directory, target: directory };
   }
 
   /** The workspace folder of a file, or the first one: regodrill reads .regodrill.yaml there. */
@@ -116,11 +237,27 @@ export class MutationTesting
     return folder ? { cwd: folder.uri.fsPath, target: folder.uri.fsPath } : undefined;
   }
 
-  private async runCommand(): Promise<void> {
+  private async runCommand(options: RunOptions = {}): Promise<void> {
     if (!vscode.workspace.isTrusted) {
       void vscode.window.showInformationMessage(
         'Mutation testing runs the regodrill binary and the policies tests, which is off in Restricted Mode.'
       );
+      return;
+    }
+    if (options.target) {
+      await this.run(this.targetFor(options.target), options.download === true);
+      return;
+    }
+    if (options.download) {
+      // From the walkthrough: no question about the directory, a first run where the tests are.
+      const target = await this.suggestedTarget();
+      if (!target) {
+        void vscode.window.showInformationMessage(
+          'Open a folder with Rego policies and their tests (files ending in _test.rego) to try mutation testing.'
+        );
+        return;
+      }
+      await this.run(target, true);
       return;
     }
     const active = vscode.window.activeTextEditor?.document;
@@ -151,16 +288,20 @@ export class MutationTesting
     await this.run(target);
   }
 
-  private async run(target: { cwd: string; target: string }): Promise<void> {
+  /** Runs regodrill on a target. `consented`: the user already agreed to download regodrill if needed. */
+  private async run(target: { cwd: string; target: string }, consented = false): Promise<void> {
     if (this.running) {
       return;
     }
     this.running = true;
-    this.lastTarget = target;
-    const config = vscode.workspace.getConfiguration(SECTION);
-    const binary = config.get<string>('path', '').trim() || 'regodrill';
-    const extra = config.get<string[]>('args', []);
+    const extra = vscode.workspace.getConfiguration(SECTION).get<string[]>('args', []);
     try {
+      const tool = await this.regodrill.ensure('Mutation testing', consented);
+      if (!tool) {
+        return;
+      }
+      const binary = tool.path;
+      this.lastTarget = target;
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
@@ -204,6 +345,8 @@ export class MutationTesting
             return;
           }
           this.show(parseReport(result.stdout), target.cwd);
+          await this.context?.workspaceState.update(RAN_KEY, true);
+          this.lensesChanged.fire();
         }
       );
     } catch (err) {
@@ -282,7 +425,7 @@ export class MutationTesting
   }
 
   provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
-    return (this.summaries.get(document.uri.fsPath) ?? [])
+    const lenses = (this.summaries.get(document.uri.fsPath) ?? [])
       .filter((s) => s.line < document.lineCount)
       .map(
         (s) =>
@@ -293,6 +436,26 @@ export class MutationTesting
             command: RUN_COMMAND,
           })
       );
+    // Until a first run in this workspace: an offer to check a test file's tests.
+    if (
+      document.uri.scheme === 'file' &&
+      document.fileName.endsWith('_test.rego') &&
+      this.suggestionsOn()
+    ) {
+      const line = packageLine(document);
+      const options: RunOptions = { target: path.dirname(document.uri.fsPath) };
+      lenses.push(
+        new vscode.CodeLens(new vscode.Range(line, 0, line, 0), {
+          title: '$(beaker) Check these tests with mutation testing',
+          tooltip:
+            'Runs regodrill on this directory: it changes the policies one small step at a time and shows ' +
+            'the changes that no test notices.',
+          command: RUN_COMMAND,
+          arguments: [options],
+        })
+      );
+    }
+    return lenses;
   }
 
   provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover | undefined {

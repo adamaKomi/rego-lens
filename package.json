@@ -88,17 +88,17 @@
         "regoSyntaxSupport.embeddedRego.check": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Check the Rego of OPA Gatekeeper `ConstraintTemplate` files with `opa check` when they are opened or saved, and show the errors on the YAML lines. Rego v0 or v1 is chosen as Gatekeeper does (`source.version`)."
+          "markdownDescription": "Check the Rego of OPA Gatekeeper `ConstraintTemplate` files with `opa check`, or `regodrill check` when there is no `opa`, when they are opened or saved, and show the errors on the YAML lines. Rego v0 or v1 is chosen as Gatekeeper does (`source.version`)."
         },
         "regoSyntaxSupport.opa.path": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Path to the `opa` binary. Empty: the official OPA extension's `opa.dependency_paths.opa` if set, else `opa` on the `PATH`. Only the user value is used in Restricted Mode."
+          "markdownDescription": "Path to the `opa` binary. Empty: the official OPA extension's `opa.dependency_paths.opa` if set, else `opa` on the `PATH`, else [regodrill](https://github.com/adamaKomi/regodrill) (`regodrill check`, same checks). Only the user value is used in Restricted Mode."
         },
         "regoSyntaxSupport.regodrill.path": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Path to the [regodrill](https://github.com/adamaKomi/regodrill) binary, which runs mutation testing. Empty: `regodrill` on the `PATH`. Only the user value is used in Restricted Mode."
+          "markdownDescription": "Path to the [regodrill](https://github.com/adamaKomi/regodrill) binary, which runs mutation testing. Empty: `regodrill` on the `PATH`, else the copy that the extension downloads from GitHub when you agree (its SHA-256 is checked). Only the user value is used in Restricted Mode."
         },
         "regoSyntaxSupport.regodrill.args": {
           "type": "array",
@@ -112,6 +112,11 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Run mutation testing again when a Rego file is saved (on the last target, or the workspace folder)."
+        },
+        "regoSyntaxSupport.regodrill.suggest": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Suggest mutation testing until a first run in the workspace: a CodeLens on `*_test.rego` files and a one-time notice."
         }
       }
     },
@@ -174,6 +179,44 @@
       {
         "language": "rego",
         "path": "./snippets/rego.snippets.json"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "gettingStarted",
+        "title": "Get Started with Rego Syntax Support",
+        "description": "Rego embedded in YAML and Markdown, checks of Gatekeeper templates, and the quality of your tests with mutation testing.",
+        "steps": [
+          {
+            "id": "embedded",
+            "title": "Rego in YAML and Markdown",
+            "description": "Rego is highlighted in `.rego` files, in the `rego` and `libs` fields of Gatekeeper templates, in YAML keys ending in `.rego`, and in Markdown code blocks marked `rego`. Snippets: type `tmpl`, `func` or `meta`.",
+            "media": {
+              "markdown": "media/walkthrough/embedded.md"
+            }
+          },
+          {
+            "id": "gatekeeper",
+            "title": "Check Gatekeeper templates",
+            "description": "Errors in the Rego of a ConstraintTemplate appear on its YAML lines when you open or save it, read as Rego v0 or v1 like Gatekeeper does. The check uses opa if it is installed, otherwise regodrill, which the extension downloads once when you agree.\n[Check the Open Template](command:regoSyntaxSupport.checkEmbeddedRego)",
+            "media": {
+              "markdown": "media/walkthrough/gatekeeper.md"
+            },
+            "when": "!isWeb"
+          },
+          {
+            "id": "mutationTesting",
+            "title": "Do your tests catch bugs?",
+            "description": "Passing tests can still miss bugs. Mutation testing changes your policy one small step at a time (`>=` becomes `>`, a condition disappears) and runs your tests after each change: a change that no test notices shows a missing test. The first run downloads regodrill from GitHub and checks its SHA-256.\n[Try Mutation Testing](command:regoSyntaxSupport.runMutationTesting?%7B%22download%22%3Atrue%7D)",
+            "media": {
+              "markdown": "media/walkthrough/mutation-testing.md"
+            },
+            "completionEvents": [
+              "onCommand:regoSyntaxSupport.runMutationTesting"
+            ],
+            "when": "!isWeb"
+          }
+        ]
       }
     ]
   },

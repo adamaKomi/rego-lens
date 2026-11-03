@@ -2,9 +2,13 @@
  * Integration tests: run inside a real VS Code instance (npm run test:integration).
  */
 import * as assert from 'assert';
+import { execFile } from 'child_process';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { installRegodrill } from '../../tools/install';
+import { REGODRILL_RELEASE } from '../../tools/regodrill-release';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const FIXTURES = path.join(ROOT, 'test', 'integration');
@@ -70,6 +74,51 @@ suite('Mutation testing', () => {
     assert.ok(
       (await vscode.commands.getCommands(true)).includes('regoSyntaxSupport.runMutationTesting')
     );
+  });
+
+  test('a test file gets a CodeLens that offers mutation testing on its directory', async () => {
+    const file = path.join(ROOT, 'test', 'mutation', 'policy_test.rego');
+    const doc = await vscode.workspace.openTextDocument(file);
+    await vscode.window.showTextDocument(doc);
+    const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>(
+      'vscode.executeCodeLensProvider',
+      doc.uri
+    );
+    const offer = lenses.find((l) =>
+      l.command?.title.includes('Check these tests with mutation testing')
+    );
+    assert.ok(
+      offer,
+      `no mutation testing CodeLens in ${JSON.stringify(lenses.map((l) => l.command?.title))}`
+    );
+    assert.strictEqual(offer.range.start.line, 0, 'on the package line');
+    assert.strictEqual(offer.command?.command, 'regoSyntaxSupport.runMutationTesting');
+    assert.deepStrictEqual(offer.command?.arguments, [{ target: path.dirname(file) }]);
+  });
+
+  test('the walkthrough opens', async () => {
+    await vscode.commands.executeCommand(
+      'workbench.action.openWalkthrough',
+      `${pkg.publisher}.${pkg.name}#gettingStarted`,
+      false
+    );
+  });
+
+  // Downloads the regodrill release fixed in the extension for this platform (zip on Windows, tar.gz
+  // elsewhere), checks its SHA-256 and runs it, in the extension host. Network: only with TEST_DOWNLOAD=1 (CI).
+  test('regodrill downloads, checks and runs on this platform', async function () {
+    if (process.env.TEST_DOWNLOAD !== '1') {
+      this.skip();
+    }
+    this.timeout(180000);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rego-syntax-support-download-'));
+    const installed = await installRegodrill(dir, REGODRILL_RELEASE);
+    const output = await new Promise<string>((resolve, reject) =>
+      execFile(installed, ['version'], (err, stdout) =>
+        err ? reject(new Error(err.message, { cause: err })) : resolve(stdout)
+      )
+    );
+    assert.ok(output.startsWith(`regodrill ${REGODRILL_RELEASE.version} `), output);
   });
 });
 

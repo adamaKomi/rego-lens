@@ -105,16 +105,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run compile
+      # TEST_DOWNLOAD: download the regodrill release fixed in src/tools/regodrill-release.ts for this platform,
+      # check it and run it.
       - name: Integration tests (Linux)
         if: runner.os == 'Linux'
         run: xvfb-run -a npm run test:integration
         env:
           VSCODE_VERSION: ${{ matrix.vscode }}
+          TEST_DOWNLOAD: '1'
       - name: Integration tests
         if: runner.os != 'Linux'
         run: npm run test:integration
         env:
           VSCODE_VERSION: ${{ matrix.vscode }}
+          TEST_DOWNLOAD: '1'
 
   package:
     name: Package

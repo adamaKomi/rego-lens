@@ -1,24 +1,36 @@
 /**
- * Desktop entry point: checks the Rego embedded in OPA Gatekeeper ConstraintTemplates with `opa check`,
- * and shows its errors on the YAML lines. The grammars and snippets need no code; VS Code for the Web uses
- * web.ts, where this check is not available (it needs the opa binary).
+ * Desktop entry point: checks the Rego embedded in OPA Gatekeeper ConstraintTemplates with `opa check`, or
+ * `regodrill check` when there is no opa, and shows its errors on the YAML lines; registers mutation testing.
+ * The grammars and snippets need no code; VS Code for the Web uses web.ts, where these features are not
+ * available (they run binaries).
  */
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { checkGroup, Finding, parseOpaVersion, runProcess } from './embedded/check';
 import { extractConstraintTemplates } from './embedded/extract';
 import { MutationTesting } from './mutation/mutation';
+import { Regodrill } from './tools/regodrill';
 
 const SECTION = 'regoSyntaxSupport';
 const COMMAND = 'regoSyntaxSupport.checkEmbeddedRego';
-/** Global state key: the user does not want to hear about a missing opa binary again. */
+/** Global state key: the user does not want to hear about a missing opa or regodrill binary again. */
 const MISSING_DISMISSED = 'opaMissingDismissed';
+
+/** The program that checks the Rego: opa, or regodrill, whose `check` has the same flags and output. */
+interface Checker {
+  path: string;
+  /** Major version of OPA, for versionFlags: regodrill check takes the flags of OPA 1.x. */
+  major: number;
+  name: 'opa check' | 'regodrill check';
+}
 
 /** A quick test before parsing: only ConstraintTemplates have embedded Rego to check. */
 const TEMPLATE = /^kind:\s*["']?ConstraintTemplate["']?\s*$/m;
 
 export function activate(context: vscode.ExtensionContext): void {
   const diagnostics = vscode.languages.createDiagnosticCollection('rego-embedded');
-  const checker = new EmbeddedRegoChecker(diagnostics, context.globalState);
+  const regodrill = new Regodrill(path.join(context.globalStorageUri.fsPath, 'regodrill'));
+  const checker = new EmbeddedRegoChecker(diagnostics, context.globalState, regodrill);
   context.subscriptions.push(
     diagnostics,
     vscode.workspace.onDidOpenTextDocument((d) => checker.check(d)),
@@ -26,6 +38,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidCloseTextDocument((d) => diagnostics.delete(d.uri)),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration(SECTION) || e.affectsConfiguration('opa.dependency_paths.opa')) {
+        regodrill.reset();
         checker.reset();
         checker.checkOpenDocuments();
       }
@@ -38,7 +51,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
       if (!vscode.workspace.isTrusted) {
         void vscode.window.showInformationMessage(
-          'Checking the Rego of Gatekeeper templates runs the opa binary, which is off in Restricted Mode.'
+          'Checking the Rego of Gatekeeper templates runs opa or regodrill, which is off in Restricted Mode.'
         );
         return;
       }
@@ -49,7 +62,8 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
   checker.checkOpenDocuments();
-  new MutationTesting().register(context);
+  new MutationTesting(regodrill).register(context);
+  void regodrill.updateDownloaded();
 }
 
 export function deactivate(): void {
@@ -65,7 +79,8 @@ class EmbeddedRegoChecker {
 
   constructor(
     private readonly diagnostics: vscode.DiagnosticCollection,
-    private readonly state: vscode.Memento
+    private readonly state: vscode.Memento,
+    private readonly regodrill: Regodrill
   ) {}
 
   reset(): void {
@@ -110,17 +125,17 @@ class EmbeddedRegoChecker {
       return 0;
     }
     const groups = extractConstraintTemplates(text);
-    const opa = await this.opa(explicit);
-    if (!opa) {
+    const checker = await this.checker(explicit);
+    if (!checker) {
       return 0;
     }
     const findings: Finding[] = [];
     for (const group of groups) {
       try {
-        findings.push(...(await checkGroup(group, opa)));
+        findings.push(...(await checkGroup(group, checker)));
       } catch (err) {
         void vscode.window.showWarningMessage(
-          `Rego Syntax Support: opa check failed: ${String(err)}`
+          `Rego Syntax Support: ${checker.name} failed: ${String(err)}`
         );
         return 0;
       }
@@ -137,7 +152,7 @@ class EmbeddedRegoChecker {
           line.range.end.character
         );
         const diagnostic = new vscode.Diagnostic(range, f.message, vscode.DiagnosticSeverity.Error);
-        diagnostic.source = 'opa check';
+        diagnostic.source = checker.name;
         diagnostic.code = f.code;
         return diagnostic;
       })
@@ -146,44 +161,69 @@ class EmbeddedRegoChecker {
   }
 
   /**
-   * The opa binary to use: this extension's setting, else the official OPA extension's
-   * (opa.dependency_paths.opa), else `opa` on the PATH.
+   * The program that checks the Rego. opa first: this extension's setting, else the official OPA extension's
+   * (opa.dependency_paths.opa), else `opa` on the PATH. Then regodrill 0.3.0 or later (setting, PATH, or the
+   * downloaded copy), unless this extension's opa setting names a binary: that one is what the user wants.
+   * With neither, the user is told once per session, and can download regodrill.
    */
-  private async opa(explicit: boolean): Promise<{ path: string; major: number } | undefined> {
+  private async checker(explicit: boolean): Promise<Checker | undefined> {
     const own = vscode.workspace.getConfiguration(SECTION).get<string>('opa.path', '').trim();
     const official = vscode.workspace
       .getConfiguration('opa')
       .get<string | null>('dependency_paths.opa', null);
-    const path = own || official?.trim() || 'opa';
-    if (!this.versions.has(path)) {
-      const major = await runProcess(path, ['version'], 10000).then(
+    const opa = own || official?.trim() || 'opa';
+    if (!this.versions.has(opa)) {
+      const major = await runProcess(opa, ['version'], 10000).then(
         (r) => parseOpaVersion(r.stdout) ?? null,
         () => null
       );
-      this.versions.set(path, major);
+      this.versions.set(opa, major);
     }
-    const major = this.versions.get(path);
-    if (major === null || major === undefined) {
-      // Say it once per session at most, never again once dismissed, and always for an explicit request.
-      if (explicit || (!this.warnedMissing && !this.state.get<boolean>(MISSING_DISMISSED, false))) {
-        this.warnedMissing = true;
-        const choice = await vscode.window.showInformationMessage(
-          `Rego Syntax Support checks the Rego of Gatekeeper templates with opa, but "${path}" could not run. ` +
-            'Install OPA (https://www.openpolicyagent.org/docs#install-and-run-opa) or set the path to it.',
-          'Open Settings',
-          "Don't Show Again"
-        );
-        if (choice === 'Open Settings') {
-          void vscode.commands.executeCommand(
-            'workbench.action.openSettings',
-            `${SECTION}.opa.path`
-          );
-        } else if (choice === "Don't Show Again") {
-          await this.state.update(MISSING_DISMISSED, true);
+    const major = this.versions.get(opa);
+    if (major !== null && major !== undefined) {
+      return { path: opa, major, name: 'opa check' };
+    }
+    if (!own) {
+      for (const tool of [await this.regodrill.find(), await this.regodrill.downloaded()]) {
+        if (tool && (await this.regodrill.supportsCheck(tool))) {
+          return { path: tool.path, major: 1, name: 'regodrill check' };
         }
+      }
+    }
+    // Say it once per session at most, never again once dismissed, and always for an explicit request.
+    if (!explicit && (this.warnedMissing || this.state.get<boolean>(MISSING_DISMISSED, false))) {
+      return undefined;
+    }
+    this.warnedMissing = true;
+    if (own) {
+      const choice = await vscode.window.showInformationMessage(
+        `Rego Syntax Support checks the Rego of Gatekeeper templates with opa, but "${own}" could not run. ` +
+          'Fix the path to opa, or clear it to use regodrill.',
+        'Open Settings'
+      );
+      if (choice === 'Open Settings') {
+        void vscode.commands.executeCommand('workbench.action.openSettings', `${SECTION}.opa.path`);
       }
       return undefined;
     }
-    return { path, major };
+    const choice = await vscode.window.showInformationMessage(
+      'Rego Syntax Support checks the Rego of Gatekeeper templates with regodrill or opa, and found ' +
+        `neither. Download regodrill ${this.regodrill.release.version} (${this.regodrill.downloadSize()}) ` +
+        'from GitHub? Its SHA-256 is checked before it is used.',
+      'Download',
+      'Open Settings',
+      "Don't Show Again"
+    );
+    if (choice === 'Download') {
+      const tool = await this.regodrill.ensureDownloaded('Checking Gatekeeper templates');
+      if (tool && (await this.regodrill.supportsCheck(tool))) {
+        return { path: tool.path, major: 1, name: 'regodrill check' };
+      }
+    } else if (choice === 'Open Settings') {
+      void vscode.commands.executeCommand('workbench.action.openSettings', `${SECTION}.opa.path`);
+    } else if (choice === "Don't Show Again") {
+      await this.state.update(MISSING_DISMISSED, true);
+    }
+    return undefined;
   }
 }

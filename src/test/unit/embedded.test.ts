@@ -227,21 +227,9 @@ suite('Checking embedded Rego with opa check', () => {
     assert.deepStrictEqual(await checkGroup(group, { path: 'opa', major: 1 }, run), []);
   });
 
-  // Runs the real opa binary when there is one (CI installs it in the OPA job and sets REQUIRE_OPA=1).
-  test('with the real opa binary', async function () {
-    let major: number | undefined;
-    try {
-      major = parseOpaVersion((await runProcess('opa', ['version'], 10000)).stdout);
-    } catch {
-      major = undefined;
-    }
-    if (major === undefined) {
-      if (process.env.REQUIRE_OPA === '1') {
-        assert.fail('REQUIRE_OPA=1 but opa is not on the PATH');
-      }
-      this.skip();
-    }
-    const groups = extractConstraintTemplates(
+  /** A v0 template with an unsafe variable on YAML line 9 (0-based 8), and a valid v1 template. */
+  function realBinaryGroups(): EmbeddedGroup[] {
+    return extractConstraintTemplates(
       yaml(
         'kind: ConstraintTemplate',
         'spec:',
@@ -264,11 +252,48 @@ suite('Checking embedded Rego with opa check', () => {
         '              violation contains {"msg": "ok"} if input.review.object.kind == "Pod"'
       )
     );
-    const findings = await Promise.all(groups.map((g) => checkGroup(g, { path: 'opa', major })));
-    // The v0 module has an unsafe variable on YAML line 9 (0-based 8); the v1 module is valid.
+  }
+  const REAL_BINARY_FINDINGS = [[[8, 'rego_unsafe_var_error']], []];
+
+  // Runs the real opa binary when there is one (CI installs it in the OPA job and sets REQUIRE_OPA=1).
+  test('with the real opa binary', async function () {
+    let major: number | undefined;
+    try {
+      major = parseOpaVersion((await runProcess('opa', ['version'], 10000)).stdout);
+    } catch {
+      major = undefined;
+    }
+    if (major === undefined) {
+      if (process.env.REQUIRE_OPA === '1') {
+        assert.fail('REQUIRE_OPA=1 but opa is not on the PATH');
+      }
+      this.skip();
+    }
+    const findings = await Promise.all(
+      realBinaryGroups().map((g) => checkGroup(g, { path: 'opa', major }))
+    );
     assert.deepStrictEqual(
       findings.map((f) => f.map((x) => [x.line, x.code])),
-      [[[8, 'rego_unsafe_var_error']], []]
+      REAL_BINARY_FINDINGS
+    );
+  });
+
+  // regodrill check (regodrill 0.3.0 or later) takes the flags of OPA 1.x and gives the same errors: the
+  // extension uses it when there is no opa. Runs when regodrill on the PATH has `check`.
+  test('with the real regodrill binary (regodrill check)', async function () {
+    const probe = await runProcess('regodrill', ['check'], 10000).catch(() => undefined);
+    if (!probe || !/specify at least one file/.test(probe.stderr)) {
+      if (process.env.REQUIRE_REGODRILL === '1') {
+        assert.fail('REQUIRE_REGODRILL=1 but regodrill on the PATH has no check command');
+      }
+      this.skip();
+    }
+    const findings = await Promise.all(
+      realBinaryGroups().map((g) => checkGroup(g, { path: 'regodrill', major: 1 }))
+    );
+    assert.deepStrictEqual(
+      findings.map((f) => f.map((x) => [x.line, x.code])),
+      REAL_BINARY_FINDINGS
     );
   });
 });
