@@ -95,7 +95,12 @@ on the directory of the current Rego file, and shows each gap where it is:
 Settings: `regoSyntaxSupport.regodrill.path` (default: `regodrill` on the `PATH`),
 `regoSyntaxSupport.regodrill.args` (extra flags, such as `--v0-compatible`), and
 `regoSyntaxSupport.regodrill.runOnSave` (default off). A `.regodrill.yaml` in the workspace folder applies
-too. regodrill is not published yet; this command needs a regodrill binary. It is off in Restricted Mode.
+too. It is off in Restricted Mode.
+
+The command needs the regodrill binary: download it from the
+[regodrill releases](https://github.com/adamaKomi/regodrill/releases) (Linux, macOS and Windows), or install
+it with `go install github.com/adamaKomi/regodrill/cmd/regodrill@latest`, then put it on the `PATH` or set
+`regoSyntaxSupport.regodrill.path`.
 
 ## Rego inside Markdown
 
