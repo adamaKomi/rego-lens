@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Gatekeeper does, when the file is opened or saved, or with the command **Rego: Check Rego in Gatekeeper
   Templates**. Settings: `regoSyntaxSupport.embeddedRego.check`, `regoSyntaxSupport.opa.path` (falls back to
   the official OPA extension's path, then to `opa` on the `PATH`). Off in Restricted Mode and in vscode.dev.
+- Mutation testing with regodrill: the command **Rego: Run Mutation Testing** shows the mutants that survive
+  the tests as diagnostics, with a hover, an **Ignore this mutant** quick fix and the score in the status bar.
+  Settings: `regoSyntaxSupport.regodrill.path`, `regoSyntaxSupport.regodrill.args`,
+  `regoSyntaxSupport.regodrill.runOnSave`. Needs a regodrill binary.
 
 ### Changed
 - The description starts with "Open Policy Agent (OPA)", so the extension is easier to find in Marketplace search.

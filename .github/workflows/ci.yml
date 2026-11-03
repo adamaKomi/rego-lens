@@ -64,7 +64,7 @@ jobs:
         run: |
           opa version
           status=0
-          for file in test/fixtures/*.rego test/integration/*.rego out/snippets-check/*.rego; do
+          for file in test/fixtures/*.rego test/integration/*.rego test/mutation/*.rego out/snippets-check/*.rego; do
             if opa parse "$file" > /dev/null; then
               echo "ok      $file"
             else

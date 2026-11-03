@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { checkGroup, Finding, parseOpaVersion, runProcess } from './embedded/check';
 import { extractConstraintTemplates } from './embedded/extract';
+import { MutationTesting } from './mutation/mutation';
 
 const SECTION = 'regoSyntaxSupport';
 const COMMAND = 'regoSyntaxSupport.checkEmbeddedRego';
@@ -48,6 +49,7 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
   checker.checkOpenDocuments();
+  new MutationTesting().register(context);
 }
 
 export function deactivate(): void {

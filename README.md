@@ -79,6 +79,24 @@ If no `opa` can run, a notification says so once (it can be turned off for good)
 binary, and in vscode.dev, where there is none. The Rego is written to a temporary directory for `opa`,
 then deleted.
 
+## Mutation testing with regodrill
+
+[regodrill](https://github.com/adamaKomi/regodrill) makes one small change at a time to your policies (`>=`
+becomes `>`, a condition is removed, a role is dropped from a set) and runs your tests. A change that no test
+notices is a gap in the tests. The command **Rego: Run Mutation Testing** runs it on the workspace folder, or
+on the directory of the current Rego file, and shows each gap where it is:
+
+- a warning for a change that survives the tests, an information for a line that no test evaluates;
+- on hover: the change, the rule, and the tests that evaluate the line;
+- a quick fix, **Ignore this mutant**, that adds a `# regodrill:ignore OPERATOR` annotation once you have
+  checked that the change cannot matter;
+- the score in the status bar (click to run again).
+
+Settings: `regoSyntaxSupport.regodrill.path` (default: `regodrill` on the `PATH`),
+`regoSyntaxSupport.regodrill.args` (extra flags, such as `--v0-compatible`), and
+`regoSyntaxSupport.regodrill.runOnSave` (default off). A `.regodrill.yaml` in the workspace folder applies
+too. regodrill is not published yet; this command needs a regodrill binary. It is off in Restricted Mode.
+
 ## Rego inside Markdown
 
 ```` ```rego ```` and `~~~rego` fenced code blocks are highlighted, in lists and block quotes too.

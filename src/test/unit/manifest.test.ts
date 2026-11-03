@@ -59,30 +59,46 @@ suite('Extension manifest (package.json)', () => {
   });
 
   test('every contributed command is registered by the extension', () => {
-    const source = fs.readFileSync(path.join(ROOT, 'src', 'extension.ts'), 'utf8');
+    // The extension's sources, tests excepted.
+    const sources = ['extension.ts', 'mutation/mutation.ts']
+      .map((f) => fs.readFileSync(path.join(ROOT, 'src', f), 'utf8'))
+      .join('\n');
     const commands = (pkg.contributes.commands ?? []) as Array<{ command: string }>;
     assert.ok(commands.length > 0);
     for (const { command } of commands) {
       assert.ok(
-        source.includes(`'${command}'`),
-        `${command} is not registered in src/extension.ts`
+        sources.includes(`'${command}'`),
+        `${command} is not registered in the extension's sources`
       );
     }
   });
 
-  test('the setting that names a binary is restricted in untrusted workspaces', () => {
+  test('settings that name a binary or its arguments are restricted in untrusted workspaces', () => {
     // https://code.visualstudio.com/api/extension-guides/workspace-trust: settings used to run a CLI can be an
     // attack vector if a workspace overrides them; restrictedConfigurations keeps only the user value.
     const caps = (pkg as Record<string, unknown>).capabilities as {
       untrustedWorkspaces: { supported: string; restrictedConfigurations: string[] };
     };
     assert.strictEqual(caps.untrustedWorkspaces.supported, 'limited');
-    assert.deepStrictEqual(caps.untrustedWorkspaces.restrictedConfigurations, [
-      'regoSyntaxSupport.opa.path',
-    ]);
     const properties = (pkg.contributes.configuration as { properties: Record<string, unknown> })
       .properties;
-    assert.ok('regoSyntaxSupport.opa.path' in properties);
+    const sensitive = Object.keys(properties).filter((k) => /\.(path|args)$/.test(k));
+    assert.deepStrictEqual(
+      sensitive.sort(),
+      [...caps.untrustedWorkspaces.restrictedConfigurations].sort()
+    );
+    assert.ok(sensitive.length >= 3);
+  });
+
+  test('commands that run a binary are hidden in VS Code for the Web', () => {
+    // https://code.visualstudio.com/api/references/when-clause-contexts: isWeb is "True when accessing the
+    // editor from the Web." The web entry point registers no command.
+    type Menus = { menus: { commandPalette: Array<{ command: string; when: string }> } };
+    const menus = (pkg.contributes as unknown as Menus).menus;
+    for (const { command } of (pkg.contributes.commands ?? []) as Array<{ command: string }>) {
+      const entry = menus.commandPalette.find((m) => m.command === command);
+      assert.ok(entry && /!isWeb/.test(entry.when), `${command} is not hidden with !isWeb`);
+    }
   });
 
   test('categories only advertise what the extension provides', () => {
