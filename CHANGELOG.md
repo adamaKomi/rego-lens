@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mutation testing with regodrill: the command **Rego: Run Mutation Testing** shows the mutants that survive
   the tests as diagnostics, with a hover, an **Ignore this mutant** quick fix and the score in the status bar.
   Settings: `regoSyntaxSupport.regodrill.path`, `regoSyntaxSupport.regodrill.args`,
-  `regoSyntaxSupport.regodrill.runOnSave`. Needs a regodrill binary.
+  `regoSyntaxSupport.regodrill.runOnSave`. Needs the regodrill binary, from the
+  [regodrill releases](https://github.com/adamaKomi/regodrill/releases) or `go install`.
 
 ### Changed
 - The description starts with "Open Policy Agent (OPA)", so the extension is easier to find in Marketplace search.
