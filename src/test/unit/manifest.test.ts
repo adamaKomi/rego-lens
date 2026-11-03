@@ -22,6 +22,15 @@ const pkg = readPackageJson() as ReturnType<typeof readPackageJson> & {
     snippets: Array<{ language: string; path: string }>;
     configuration?: unknown;
     commands?: unknown;
+    walkthroughs?: Array<{
+      id: string;
+      steps: Array<{
+        id: string;
+        description: string;
+        when?: string;
+        media: { markdown?: string; image?: string };
+      }>;
+    }>;
   };
 };
 
@@ -36,6 +45,9 @@ suite('Extension manifest (package.json)', () => {
       ...pkg.contributes.grammars.map((g) => g.path),
       ...pkg.contributes.snippets.map((s) => s.path),
       ...pkg.contributes.languages.flatMap((l) => [l.configuration, l.icon?.light, l.icon?.dark]),
+      ...(pkg.contributes.walkthroughs ?? []).flatMap((w) =>
+        w.steps.flatMap((s) => [s.media.markdown, s.media.image])
+      ),
     ].filter((f): f is string => !!f);
     assert.deepStrictEqual(
       files.filter((f) => !exists(f)),
@@ -101,6 +113,34 @@ suite('Extension manifest (package.json)', () => {
     }
   });
 
+  test('walkthrough buttons run contributed commands, and steps that run binaries are hidden on the web', () => {
+    // https://code.visualstudio.com/api/references/contribution-points#contributes.walkthroughs: buttons are
+    // `command:` links in step descriptions; steps take `when` clauses. A contributed command activates the
+    // extension when it runs (VS Code 1.74 and later), so the buttons work before any Rego file is opened.
+    const commands = ((pkg.contributes.commands ?? []) as Array<{ command: string }>).map(
+      (c) => c.command
+    );
+    const steps = (pkg.contributes.walkthroughs ?? []).flatMap((w) => w.steps);
+    assert.ok(steps.length > 0);
+    for (const step of steps) {
+      for (const [, command, query] of step.description.matchAll(
+        /\(command:([\w.]+)(?:\?([^)]*))?\)/g
+      )) {
+        assert.ok(
+          commands.includes(command),
+          `${step.id}: ${command} is not a contributed command`
+        );
+        assert.ok(
+          /!isWeb/.test(step.when ?? ''),
+          `${step.id} runs ${command} but is not hidden on the web`
+        );
+        if (query) {
+          assert.doesNotThrow(() => JSON.parse(decodeURIComponent(query)) as unknown, step.id);
+        }
+      }
+    }
+  });
+
   test('categories only advertise what the extension provides', () => {
     assert.ok(!pkg.categories.includes('Formatters'), 'no formatter is contributed');
     assert.ok(!pkg.categories.includes('Linters'), 'no linter is contributed');
@@ -142,8 +182,12 @@ suite('Extension manifest (package.json)', () => {
     ]) {
       assert.ok(ignore.includes(entry), `${entry} missing from .vscodeignore`);
     }
-    // The compiled extension itself is published.
+    // The compiled extension itself is published, and the walkthrough pages.
     assert.ok(!ignore.includes('out/**'), 'out/** would leave the extension out of the package');
+    assert.ok(
+      !ignore.some((l) => l.startsWith('media')),
+      'the walkthrough pages must be published'
+    );
   });
 });
 

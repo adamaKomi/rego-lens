@@ -10,7 +10,8 @@ Syntax highlighting and snippets for [Open Policy Agent](https://www.openpolicya
 
 - Up to date with Rego v1 and OPA 1.22: string interpolation, `and` / `or`, `rego.v2`, METADATA blocks.
 - Built-in functions generated from OPA's own capabilities, deprecated ones flagged.
-- Errors in the Rego of Gatekeeper templates shown on the YAML lines, checked with `opa check` (desktop).
+- Errors in the Rego of Gatekeeper templates shown on the YAML lines, checked with `opa check` or `regodrill check` (desktop).
+- Mutation testing: which changes to your policies the tests would miss, with [regodrill](https://github.com/adamaKomi/regodrill), downloaded in one click (desktop).
 - Highlighting and snippets need no binary and work in [vscode.dev](https://vscode.dev) too.
 
 ## Rego inside YAML
@@ -65,18 +66,21 @@ Each target's `rego` is checked with its `libs`, with the Rego version that
 | `spec.targets[].rego` and `libs` (legacy fields) | v0 |
 | `spec.targets[].code[]` with `engine: Rego`: `source.rego` and `source.libs` | `source.version` (`"v1"`), v0 when absent |
 
-It needs the `opa` binary, version 0.x or 1.x. It looks for it in this order:
+It runs `opa check` (opa 0.x or 1.x), or `regodrill check`, which gives the same results with regodrill
+0.3.0 or later. It looks for them in this order:
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `regoSyntaxSupport.opa.path` | empty | Path to `opa` |
+| `regoSyntaxSupport.opa.path` | empty | Path to `opa`. When set, it is the only binary used |
 | `opa.dependency_paths.opa` | | The path set by the [official OPA extension](https://marketplace.visualstudio.com/items?itemName=tsandall.opa), when installed |
 | | | `opa` on the `PATH` |
+| `regoSyntaxSupport.regodrill.path` | empty | Path to regodrill, else `regodrill` on the `PATH`, else the copy downloaded by the extension (see [Downloading regodrill](#downloading-regodrill)) |
 | `regoSyntaxSupport.embeddedRego.check` | `true` | Check on open and save; the command works either way |
 
-If no `opa` can run, a notification says so once (it can be turned off for good). The check is off in
+With neither binary, a notification offers to download regodrill, once per session (it can be turned off for
+good). The check is off in
 [Restricted Mode](https://code.visualstudio.com/docs/editing/workspaces/workspace-trust), since it runs a
-binary, and in vscode.dev, where there is none. The Rego is written to a temporary directory for `opa`,
+binary, and in vscode.dev, where there is none. The Rego is written to a temporary directory for the check,
 then deleted.
 
 ## Mutation testing with regodrill
@@ -93,15 +97,36 @@ on the directory of the current Rego file, and shows each gap where it is:
 - above each rule definition, a CodeLens such as `allow: 3/5 mutants killed` (with regodrill 0.2.0 or later);
 - the score in the status bar (click to run again).
 
-Settings: `regoSyntaxSupport.regodrill.path` (default: `regodrill` on the `PATH`),
-`regoSyntaxSupport.regodrill.args` (extra flags, such as `--v0-compatible`), and
-`regoSyntaxSupport.regodrill.runOnSave` (default off). A `.regodrill.yaml` in the workspace folder applies
-too. It is off in Restricted Mode.
+Until a first run in the workspace, a CodeLens on test files (`*_test.rego`), **Check these tests with
+mutation testing**, and a one-time notice offer to try it; the walkthrough **Get Started with Rego Syntax
+Support** explains it too.
 
-The command needs the regodrill binary: download it from the
-[regodrill releases](https://github.com/adamaKomi/regodrill/releases) (Linux, macOS and Windows), or install
-it with `go install github.com/adamaKomi/regodrill/cmd/regodrill@latest`, then put it on the `PATH` or set
-`regoSyntaxSupport.regodrill.path`.
+Settings: `regoSyntaxSupport.regodrill.path` (default: `regodrill` on the `PATH`, else the downloaded copy),
+`regoSyntaxSupport.regodrill.args` (extra flags, such as `--v0-compatible`),
+`regoSyntaxSupport.regodrill.runOnSave` (default off) and `regoSyntaxSupport.regodrill.suggest` (the CodeLens
+and the notice; default on). A `.regodrill.yaml` in the workspace folder applies too. It is off in Restricted
+Mode.
+
+### Downloading regodrill
+
+Mutation testing and, when there is no opa, the check of Gatekeeper templates run the regodrill binary. When
+none is set or on the `PATH`, the extension offers to download it, and does so only after a click:
+
+- the version is fixed in the extension, with the SHA-256 of each platform's archive (Linux, macOS and
+  Windows, x64 and arm64). These were checked against the build provenance attestation of the
+  [regodrill release](https://github.com/adamaKomi/regodrill/releases) when the extension was built; an
+  archive with another SHA-256 is refused;
+- it is downloaded from GitHub over HTTPS, about 7 MB, into the extension's storage, and is never added to
+  the `PATH`. Where GitHub cannot be reached (a proxy, an offline network), set the path to a regodrill
+  binary instead;
+- when an update of the extension brings a newer regodrill, the downloaded copy is updated in the background
+  if VS Code updates extensions automatically (`extensions.autoUpdate`), and after a question otherwise. The
+  per-extension **Auto Update** toggle is not visible to extensions, so only the setting counts;
+- nothing is downloaded in Restricted Mode, nor for someone who never clicked a download.
+
+To use another regodrill, put it on the `PATH` or set `regoSyntaxSupport.regodrill.path`: download it from
+the [releases](https://github.com/adamaKomi/regodrill/releases), or
+`go install github.com/adamaKomi/regodrill/cmd/regodrill@latest`.
 
 ## Rego inside Markdown
 
