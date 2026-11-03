@@ -1,7 +1,7 @@
 {
   "name": "rego-syntax-support",
   "displayName": "Rego Syntax Support",
-  "description": "Open Policy Agent (OPA) Rego highlighting and snippets, including Rego embedded in Gatekeeper/Kubernetes YAML and Markdown",
+  "description": "Open Policy Agent (OPA) Rego highlighting, snippets and Gatekeeper template checks, including Rego embedded in Kubernetes YAML and Markdown",
   "version": "0.2.1",
   "publisher": "AdamaKomi",
   "author": {
@@ -40,7 +40,51 @@
     "color": "#111C45",
     "theme": "dark"
   },
+  "main": "./out/extension.js",
+  "browser": "./out/web.js",
+  "activationEvents": [
+    "onLanguage:yaml"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Checking the Rego of Gatekeeper templates runs the opa binary, so it is off in Restricted Mode. Highlighting and snippets work.",
+      "restrictedConfigurations": [
+        "regoSyntaxSupport.opa.path"
+      ]
+    }
+  },
   "contributes": {
+    "commands": [
+      {
+        "command": "regoSyntaxSupport.checkEmbeddedRego",
+        "title": "Check Rego in Gatekeeper Templates",
+        "category": "Rego"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "regoSyntaxSupport.checkEmbeddedRego",
+          "when": "editorLangId == yaml"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Rego Syntax Support",
+      "properties": {
+        "regoSyntaxSupport.embeddedRego.check": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Check the Rego of OPA Gatekeeper `ConstraintTemplate` files with `opa check` when they are opened or saved, and show the errors on the YAML lines. Rego v0 or v1 is chosen as Gatekeeper does (`source.version`)."
+        },
+        "regoSyntaxSupport.opa.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the `opa` binary. Empty: the official OPA extension's `opa.dependency_paths.opa` if set, else `opa` on the `PATH`. Only the user value is used in Restricted Mode."
+        }
+      }
+    },
     "languages": [
       {
         "id": "rego",

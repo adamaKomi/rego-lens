@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Errors in the Rego of OPA Gatekeeper `ConstraintTemplate` files, shown on the YAML lines. The Rego of each
+  target (`rego` and `libs`, or `code[].source`) is checked with `opa check`, as Rego v0 or v1 like
+  Gatekeeper does, when the file is opened or saved, or with the command **Rego: Check Rego in Gatekeeper
+  Templates**. Settings: `regoSyntaxSupport.embeddedRego.check`, `regoSyntaxSupport.opa.path` (falls back to
+  the official OPA extension's path, then to `opa` on the `PATH`). Off in Restricted Mode and in vscode.dev.
+
 ### Changed
 - The description starts with "Open Policy Agent (OPA)", so the extension is easier to find in Marketplace search.
 - New icon: curly braces around a check mark, for Rego code and policies that pass their tests. Its source
