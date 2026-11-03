@@ -90,6 +90,7 @@ on the directory of the current Rego file, and shows each gap where it is:
 - on hover: the change, the rule, and the tests that evaluate the line;
 - a quick fix, **Ignore this mutant**, that adds a `# regodrill:ignore OPERATOR` annotation once you have
   checked that the change cannot matter;
+- above each rule definition, a CodeLens such as `allow: 3/5 mutants killed` (with regodrill after 0.1.0);
 - the score in the status bar (click to run again).
 
 Settings: `regoSyntaxSupport.regodrill.path` (default: `regodrill` on the `PATH`),

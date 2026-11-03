@@ -18,6 +18,8 @@ export interface ReportMutant {
   original: string;
   replacement: string;
   rule: string;
+  /** Line where the rule definition starts (regodrill after 0.1.0); absent in older reports. */
+  ruleLine?: number;
   status:
     'killed' | 'timeout' | 'survived' | 'no_coverage' | 'stillborn' | 'equivalent' | 'ignored';
   message: string;
@@ -102,6 +104,57 @@ export function changeSummary(m: ReportMutant): string {
     return `remove \`${short(m.original)}\``;
   }
   return `\`${short(m.original)}\` → \`${short(m.replacement)}\``;
+}
+
+/** Mutation results of one rule definition, for a CodeLens above it. */
+export interface RuleSummary {
+  file: string;
+  /** 0-based line of the definition. */
+  line: number;
+  /** The rule's name: the last part of its path. */
+  name: string;
+  killed: number;
+  /** Killed, timed out, survived and uncovered mutants: the ones the score counts. */
+  scored: number;
+}
+
+/**
+ * Groups the scored mutants of a report by rule definition (file and ruleLine). Reports without ruleLine
+ * (regodrill 0.1.0) give no summaries.
+ */
+export function ruleSummaries(report: Report, cwd: string): RuleSummary[] {
+  const byKey = new Map<string, RuleSummary>();
+  for (const m of report.mutants) {
+    if (
+      m.ruleLine === undefined ||
+      !['killed', 'timeout', 'survived', 'no_coverage'].includes(m.status)
+    ) {
+      continue;
+    }
+    const file = path.resolve(cwd, m.file);
+    const key = `${file}\0${m.ruleLine}`;
+    let s = byKey.get(key);
+    if (!s) {
+      s = {
+        file,
+        line: m.ruleLine - 1,
+        name: m.rule.split('.').pop() ?? m.rule,
+        killed: 0,
+        scored: 0,
+      };
+      byKey.set(key, s);
+    }
+    s.scored++;
+    if (m.status === 'killed' || m.status === 'timeout') {
+      s.killed++;
+    }
+  }
+  return [...byKey.values()].sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+}
+
+/** The text of a rule's CodeLens: "allow: 3/5 mutants killed". */
+export function summaryText(s: RuleSummary): string {
+  return `${s.name}: ${s.killed}/${s.scored} mutants killed`;
 }
 
 /** The score line for the status bar: "Mutation 85.4 %", or "Mutation n/a" when nothing is scorable. */

@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Templates**. Settings: `regoSyntaxSupport.embeddedRego.check`, `regoSyntaxSupport.opa.path` (falls back to
   the official OPA extension's path, then to `opa` on the `PATH`). Off in Restricted Mode and in vscode.dev.
 - Mutation testing with regodrill: the command **Rego: Run Mutation Testing** shows the mutants that survive
-  the tests as diagnostics, with a hover, an **Ignore this mutant** quick fix and the score in the status bar.
+  the tests as diagnostics, with a hover, an **Ignore this mutant** quick fix, a CodeLens per rule definition
+  (`allow: 3/5 mutants killed`, with regodrill after 0.1.0) and the score in the status bar.
   Settings: `regoSyntaxSupport.regodrill.path`, `regoSyntaxSupport.regodrill.args`,
   `regoSyntaxSupport.regodrill.runOnSave`. Needs a regodrill binary.
 

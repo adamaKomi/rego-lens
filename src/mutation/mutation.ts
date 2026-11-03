@@ -15,8 +15,11 @@ import {
   MutantFinding,
   parseReport,
   Report,
+  ruleSummaries,
+  RuleSummary,
   runArgs,
   scoreText,
+  summaryText,
   survivors,
 } from './report';
 
@@ -60,12 +63,18 @@ function runRegodrill(
   });
 }
 
-export class MutationTesting implements vscode.HoverProvider, vscode.CodeActionProvider {
+export class MutationTesting
+  implements vscode.HoverProvider, vscode.CodeActionProvider, vscode.CodeLensProvider
+{
   private readonly diagnostics = vscode.languages.createDiagnosticCollection('regodrill');
   private readonly output = vscode.window.createOutputChannel('regodrill');
   private readonly status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
   /** Findings by file path, from the last run. */
   private findings = new Map<string, MutantFinding[]>();
+  /** Per-definition results of the last run, by file path, for the CodeLenses. */
+  private summaries = new Map<string, RuleSummary[]>();
+  private readonly lensesChanged = new vscode.EventEmitter<void>();
+  readonly onDidChangeCodeLenses = this.lensesChanged.event;
   private lastTarget: { cwd: string; target: string } | undefined;
   private running = false;
 
@@ -80,6 +89,8 @@ export class MutationTesting implements vscode.HoverProvider, vscode.CodeActionP
         this.ignore(uri, finding)
       ),
       vscode.languages.registerHoverProvider(rego, this),
+      vscode.languages.registerCodeLensProvider(rego, this),
+      this.lensesChanged,
       vscode.languages.registerCodeActionsProvider(rego, this, {
         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
       }),
@@ -205,6 +216,11 @@ export class MutationTesting implements vscode.HoverProvider, vscode.CodeActionP
   private show(report: Report, cwd: string): void {
     this.diagnostics.clear();
     this.findings = new Map();
+    this.summaries = new Map();
+    for (const s of ruleSummaries(report, cwd)) {
+      this.summaries.set(s.file, [...(this.summaries.get(s.file) ?? []), s]);
+    }
+    this.lensesChanged.fire();
     for (const f of survivors(report, cwd)) {
       const list = this.findings.get(f.file) ?? [];
       list.push(f);
@@ -238,6 +254,10 @@ export class MutationTesting implements vscode.HoverProvider, vscode.CodeActionP
 
   /** Diagnostics of edited lines would point at the wrong text: drop them, and the ones below a line change. */
   private dropStale(e: vscode.TextDocumentChangeEvent): void {
+    // Lines may have moved: the per-rule counts wait for the next run rather than sit on the wrong rule.
+    if (e.contentChanges.length > 0 && this.summaries.delete(e.document.uri.fsPath)) {
+      this.lensesChanged.fire();
+    }
     const list = this.findings.get(e.document.uri.fsPath);
     if (!list || e.contentChanges.length === 0) {
       return;
@@ -259,6 +279,20 @@ export class MutationTesting implements vscode.HoverProvider, vscode.CodeActionP
     return (this.findings.get(document.uri.fsPath) ?? []).filter((f) =>
       new vscode.Range(f.startLine, f.startCharacter, f.endLine, f.endCharacter).contains(position)
     );
+  }
+
+  provideCodeLenses(document: vscode.TextDocument): vscode.CodeLens[] {
+    return (this.summaries.get(document.uri.fsPath) ?? [])
+      .filter((s) => s.line < document.lineCount)
+      .map(
+        (s) =>
+          new vscode.CodeLens(new vscode.Range(s.line, 0, s.line, 0), {
+            title: summaryText(s),
+            tooltip:
+              'Mutants of this rule definition killed by the tests, in the last regodrill run. Click to run again.',
+            command: RUN_COMMAND,
+          })
+      );
   }
 
   provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover | undefined {
