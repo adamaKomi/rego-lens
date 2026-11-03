@@ -43,14 +43,17 @@
   "main": "./out/extension.js",
   "browser": "./out/web.js",
   "activationEvents": [
-    "onLanguage:yaml"
+    "onLanguage:yaml",
+    "onLanguage:rego"
   ],
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Checking the Rego of Gatekeeper templates runs the opa binary, so it is off in Restricted Mode. Highlighting and snippets work.",
+      "description": "Checking the Rego of Gatekeeper templates and mutation testing run binaries (opa, regodrill), so they are off in Restricted Mode. Highlighting and snippets work.",
       "restrictedConfigurations": [
-        "regoSyntaxSupport.opa.path"
+        "regoSyntaxSupport.opa.path",
+        "regoSyntaxSupport.regodrill.path",
+        "regoSyntaxSupport.regodrill.args"
       ]
     }
   },
@@ -60,13 +63,22 @@
         "command": "regoSyntaxSupport.checkEmbeddedRego",
         "title": "Check Rego in Gatekeeper Templates",
         "category": "Rego"
+      },
+      {
+        "command": "regoSyntaxSupport.runMutationTesting",
+        "title": "Run Mutation Testing",
+        "category": "Rego"
       }
     ],
     "menus": {
       "commandPalette": [
         {
           "command": "regoSyntaxSupport.checkEmbeddedRego",
-          "when": "editorLangId == yaml"
+          "when": "editorLangId == yaml && !isWeb"
+        },
+        {
+          "command": "regoSyntaxSupport.runMutationTesting",
+          "when": "!isWeb"
         }
       ]
     },
@@ -82,6 +94,24 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Path to the `opa` binary. Empty: the official OPA extension's `opa.dependency_paths.opa` if set, else `opa` on the `PATH`. Only the user value is used in Restricted Mode."
+        },
+        "regoSyntaxSupport.regodrill.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the [regodrill](https://github.com/adamaKomi/regodrill) binary, which runs mutation testing. Empty: `regodrill` on the `PATH`. Only the user value is used in Restricted Mode."
+        },
+        "regoSyntaxSupport.regodrill.args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Extra arguments for `regodrill run`, before the path, for example `[\"--v0-compatible\"]` or `[\"--operators=COMP_BOUNDARY,EXPR_REMOVE\"]`. Settings in `.regodrill.yaml` apply too. Only the user value is used in Restricted Mode."
+        },
+        "regoSyntaxSupport.regodrill.runOnSave": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Run mutation testing again when a Rego file is saved (on the last target, or the workspace folder)."
         }
       }
     },

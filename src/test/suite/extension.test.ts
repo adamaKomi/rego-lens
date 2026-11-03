@@ -59,6 +59,20 @@ suite('Rego in Gatekeeper templates', () => {
   });
 });
 
+suite('Mutation testing', () => {
+  test('opening a Rego file activates the extension and registers the run command', async () => {
+    await vscode.window.showTextDocument(
+      await vscode.workspace.openTextDocument(path.join(FIXTURES, 'policy.rego'))
+    );
+    const ext = vscode.extensions.getExtension(`${pkg.publisher}.${pkg.name}`);
+    assert.ok(ext);
+    await ext.activate();
+    assert.ok(
+      (await vscode.commands.getCommands(true)).includes('regoSyntaxSupport.runMutationTesting')
+    );
+  });
+});
+
 suite('Highlighting in the editor', () => {
   test('.rego files use the Rego grammar', async () => {
     const tokens = await captureTokens('policy.rego');
