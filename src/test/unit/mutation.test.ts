@@ -7,8 +7,10 @@ import {
   parseReport,
   Report,
   ReportMutant,
+  ruleSummaries,
   runArgs,
   scoreText,
+  summaryText,
   survivors,
 } from '../../mutation/report';
 
@@ -142,5 +144,39 @@ suite('regodrill report', () => {
         }
       }
     );
+  });
+});
+
+suite('regodrill rule summaries', () => {
+  test('mutants are counted per rule definition; stillborn, equivalent and ignored ones are not', () => {
+    const at = (
+      ruleLine: number | undefined,
+      status: ReportMutant['status'],
+      rule = 'data.authz.allow'
+    ): ReportMutant => mutant({ ruleLine, status, rule });
+    const summaries = ruleSummaries(
+      report([
+        at(3, 'killed'),
+        at(3, 'timeout'),
+        at(3, 'survived'),
+        at(3, 'stillborn'),
+        at(3, 'ignored'),
+        at(8, 'no_coverage'),
+        at(12, 'killed', 'data.authz.level'),
+      ]),
+      '/work'
+    );
+    assert.deepStrictEqual(
+      summaries.map((s) => [s.line, summaryText(s)]),
+      [
+        [2, 'allow: 2/3 mutants killed'],
+        [7, 'allow: 0/1 mutants killed'],
+        [11, 'level: 1/1 mutants killed'],
+      ]
+    );
+  });
+
+  test('a report without ruleLine (regodrill 0.1.0) has no summaries', () => {
+    assert.deepStrictEqual(ruleSummaries(report([mutant({})]), '/work'), []);
   });
 });
