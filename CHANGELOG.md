@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - The description starts with "Open Policy Agent (OPA)", so the extension is easier to find in Marketplace search.
+- New icon: curly braces around a check mark, for Rego code and policies that pass their tests. Its source
+  is `resources/icon.svg`; `npm run build:icon` renders the PNG.
 
 ## [0.2.1]
 

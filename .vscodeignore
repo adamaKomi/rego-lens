@@ -31,5 +31,4 @@ coverage/**
 **/.gitkeep
 
 # Resources not needed
-resources/icon.png.placeholder
-resources/ICON_README.md
+resources/icon.svg
