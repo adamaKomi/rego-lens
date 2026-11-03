@@ -80,6 +80,10 @@ jobs:
             | sort > /tmp/opa-builtins.txt
           jq -r '.builtins[].name' scripts/grammar/opa-builtins.json | sort > /tmp/grammar-builtins.txt
           diff -u /tmp/opa-builtins.txt /tmp/grammar-builtins.txt
+      - name: Checks of embedded Rego with the real opa binary
+        run: npm run test:unit
+        env:
+          REQUIRE_OPA: '1'
 
   integration:
     name: VS Code ${{ matrix.vscode }} on ${{ matrix.os }}

@@ -15,7 +15,11 @@ tsconfig.json
 
 # Build/Dev files
 node_modules/**
-out/**
+# Compiled code: keep the extension (out/*.js, out/embedded/*.js), not the tests and build artifacts.
+out/test/**
+out/snippets-check/**
+out/**/*.map
+out/**/*.d.ts
 coverage/**
 .nyc_output/**
 

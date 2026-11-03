@@ -43,22 +43,37 @@ suite('Extension manifest (package.json)', () => {
     );
   });
 
-  test('the extension is purely declarative, so it also runs in VS Code for the Web', () => {
-    // https://code.visualstudio.com/api/extension-guides/web-extensions:
-    // "Extensions with only declarative contributions (only `contributes`, no `main` or `browser`) can be web extensions."
-    assert.strictEqual(pkg.main, undefined);
-    assert.strictEqual((pkg as Record<string, unknown>).browser, undefined);
-    assert.strictEqual((pkg as Record<string, unknown>).activationEvents, undefined);
-    assert.strictEqual(
-      pkg.contributes.configuration,
-      undefined,
-      'settings without code would have no effect'
-    );
-    assert.strictEqual(
-      pkg.contributes.commands,
-      undefined,
-      'commands without code cannot be executed'
-    );
+  test('a desktop entry point and a web entry point, so VS Code for the Web keeps the grammars', () => {
+    // https://code.visualstudio.com/api/extension-guides/web-extensions: "Extensions that have only a `main`
+    // entry point, but no `browser` are not web extensions", and they are ignored by the web extension host.
+    // "Extensions can have both `browser` and `main` entry points".
+    const raw = pkg as Record<string, unknown>;
+    assert.strictEqual(pkg.main, './out/extension.js');
+    assert.strictEqual(raw.browser, './out/web.js');
+    // The web entry runs as a single file in the browser: it must not import anything.
+    const web = fs.readFileSync(path.join(ROOT, 'src', 'web.ts'), 'utf8');
+    assert.ok(!/^\s*import\s/m.test(web) && !/require\(/.test(web), 'src/web.ts must not import modules');
+  });
+
+  test('every contributed command is registered by the extension', () => {
+    const source = fs.readFileSync(path.join(ROOT, 'src', 'extension.ts'), 'utf8');
+    const commands = (pkg.contributes.commands ?? []) as Array<{ command: string }>;
+    assert.ok(commands.length > 0);
+    for (const { command } of commands) {
+      assert.ok(source.includes(`'${command}'`), `${command} is not registered in src/extension.ts`);
+    }
+  });
+
+  test('the setting that names a binary is restricted in untrusted workspaces', () => {
+    // https://code.visualstudio.com/api/extension-guides/workspace-trust: settings used to run a CLI can be an
+    // attack vector if a workspace overrides them; restrictedConfigurations keeps only the user value.
+    const caps = (pkg as Record<string, unknown>).capabilities as {
+      untrustedWorkspaces: { supported: string; restrictedConfigurations: string[] };
+    };
+    assert.strictEqual(caps.untrustedWorkspaces.supported, 'limited');
+    assert.deepStrictEqual(caps.untrustedWorkspaces.restrictedConfigurations, ['regoSyntaxSupport.opa.path']);
+    const properties = (pkg.contributes.configuration as { properties: Record<string, unknown> }).properties;
+    assert.ok('regoSyntaxSupport.opa.path' in properties);
   });
 
   test('categories only advertise what the extension provides', () => {
@@ -92,9 +107,11 @@ suite('Extension manifest (package.json)', () => {
 
   test('.vscodeignore keeps sources and tests out of the published package', () => {
     const ignore = fs.readFileSync(path.join(ROOT, '.vscodeignore'), 'utf8').split(/\r?\n/);
-    for (const entry of ['src/**', 'test/**', 'scripts/**', 'out/**']) {
+    for (const entry of ['src/**', 'test/**', 'scripts/**', 'out/test/**', 'out/**/*.map', 'out/**/*.d.ts']) {
       assert.ok(ignore.includes(entry), `${entry} missing from .vscodeignore`);
     }
+    // The compiled extension itself is published.
+    assert.ok(!ignore.includes('out/**'), 'out/** would leave the extension out of the package');
   });
 });
 
