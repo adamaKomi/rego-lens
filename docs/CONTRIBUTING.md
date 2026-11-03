@@ -48,8 +48,8 @@ Feature suggestions are welcome! Please include:
 ### Getting Started
 
 ```bash
-git clone https://github.com/adamaKomi/rego-lens.git
-cd rego-lens
+git clone https://github.com/adamaKomi/rego-syntax-support.git
+cd rego-syntax-support
 npm ci            # also compiles the TypeScript tests (npm "prepare" script)
 ```
 
