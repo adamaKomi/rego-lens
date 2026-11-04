@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-04
+
 ### Added
 - regodrill is downloaded on demand: when mutation testing (or the check of Gatekeeper templates, without
   opa) needs it and none is set or on the `PATH`, the extension offers to download it from GitHub, and does
@@ -139,7 +141,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/adamaKomi/rego-syntax-support/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/adamaKomi/rego-syntax-support/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/adamaKomi/rego-syntax-support/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/adamaKomi/rego-syntax-support/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/adamaKomi/rego-syntax-support/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/adamaKomi/rego-syntax-support/compare/v0.1.0...v0.2.0

@@ -2,7 +2,7 @@
   "name": "rego-syntax-support",
   "displayName": "Rego Syntax Support",
   "description": "Open Policy Agent (OPA) Rego highlighting, snippets and Gatekeeper template checks, including Rego embedded in Kubernetes YAML and Markdown",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "AdamaKomi",
   "author": {
     "name": "Adama Komi"
