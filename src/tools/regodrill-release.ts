@@ -5,37 +5,37 @@
 import { RegodrillRelease } from './install';
 
 export const REGODRILL_RELEASE: RegodrillRelease = {
-  version: '0.2.0',
+  version: '0.3.0',
   assets: {
     'darwin-arm64': {
-      file: 'regodrill_0.2.0_darwin_arm64.tar.gz',
-      sha256: 'a826f1d4009842e452cbc93a0c449f26eb98ab146a92dcc795cc9e2af437da7d',
-      size: 7020759,
+      file: 'regodrill_0.3.0_darwin_arm64.tar.gz',
+      sha256: '75c11adc485c9b817edaab47a34b4854af6264db9a118b36d2a28ce85e420aec',
+      size: 7028927,
     },
     'darwin-x64': {
-      file: 'regodrill_0.2.0_darwin_amd64.tar.gz',
-      sha256: '3c03e36e4ed5cb100fa98cc6182b75f4ab4428c2e43193a9ebf700d125ebf2bb',
-      size: 7627265,
+      file: 'regodrill_0.3.0_darwin_amd64.tar.gz',
+      sha256: 'a78addfd4a965de820743449d9a719de1251ecb6aa16f4875ead89c612c64d80',
+      size: 7633274,
     },
     'linux-arm64': {
-      file: 'regodrill_0.2.0_linux_arm64.tar.gz',
-      sha256: 'fa6788bca9b447d9c56c7ebbfd2aac100fdee1acb31288b030e229f9602835c2',
-      size: 6723106,
+      file: 'regodrill_0.3.0_linux_arm64.tar.gz',
+      sha256: '810c3288c443ea2ecb3c28028e5400d5f092be035d094cbb217304f50cdb2cac',
+      size: 6725746,
     },
     'linux-x64': {
-      file: 'regodrill_0.2.0_linux_amd64.tar.gz',
-      sha256: 'e5003033c1d5cc439db88a578783ad39bf19a682fc9de3987e8bd817869fad4c',
-      size: 7499634,
+      file: 'regodrill_0.3.0_linux_amd64.tar.gz',
+      sha256: '1b29992ae81001e93e8f7ae6e16b1e42f85b8f45d0e7d8f5a8b315270dba26d8',
+      size: 7504835,
     },
     'win32-arm64': {
-      file: 'regodrill_0.2.0_windows_arm64.zip',
-      sha256: 'dd03476cf09b784cd1b635eab72fc7c5a57c8d9d82c27161ccb2d7a234cd5a48',
-      size: 6802613,
+      file: 'regodrill_0.3.0_windows_arm64.zip',
+      sha256: '4b9a9cb614451432407f4c0b2c8f8084a64ff8a3f4d46a988ce4cbe83203e947',
+      size: 6808637,
     },
     'win32-x64': {
-      file: 'regodrill_0.2.0_windows_amd64.zip',
-      sha256: '0f7ab04aa10d17b48fb6bcef7e8bb47d3db149c808a9a5a1e12d5a0602fd669c',
-      size: 7675553,
+      file: 'regodrill_0.3.0_windows_amd64.zip',
+      sha256: '31553459829bf8fde415a376312c3b156476cafcf58a2689bbe7c7d4b58cd046',
+      size: 7681113,
     },
   },
 };
