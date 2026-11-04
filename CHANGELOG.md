@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- regodrill is downloaded on demand: when mutation testing (or the check of Gatekeeper templates, without
+  opa) needs it and none is set or on the `PATH`, the extension offers to download it from GitHub, and does
+  so only after a click. The version and the SHA-256 of each archive are fixed in the extension and checked;
+  the copy is kept in the extension's storage and follows the extension's updates (in the background when
+  `extensions.autoUpdate` is on).
+- The check of Gatekeeper templates uses `regodrill check` (regodrill 0.3.0 or later) when there is no opa.
+- A walkthrough, **Get Started with Rego Syntax Support**, opened when the extension is installed.
+- Until a first run in the workspace, a CodeLens on test files, **Check these tests with mutation testing**,
+  and a one-time notice when the workspace has Rego tests. Setting: `regoSyntaxSupport.regodrill.suggest`.
+
 ### Changed
 - `.rego` files get an icon drawn from the extension icon (curly braces around a check mark), in place of
   the "R" icon. File icon themes that have their own Rego icon keep it.
