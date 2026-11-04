@@ -22,6 +22,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# VS Code downloaded by the integration tests, with its profile (@vscode/test-electron)
+.vscode-test/
+
 # Test coverage
 coverage/
 .nyc_output/
